@@ -23,12 +23,13 @@ The ground truth data were created after pre-processing, i.e., co-registered to 
 anatomical template, interpolated to the same resolution (1 mm3), and skull-stripped.
 
 ## Description of Approach
-The strategy chosen involves framing the tumor segmentation generalization problem as a domain adaptation problem.
-In domain adaptation problems the aim is to simultaneously improve performance in all domains. In this context, we 
+The strategy chosen involves framing the tumor segmentation generalization problem as a domain adaptation problem, where
+the aim is to simultaneously improve performance in all domains. In this context, we 
 define a domain as a group in an artificial clustering of the training datasets, and we aim to improve performance
-over all clusters. A natural clustering for this dataset would cluster based on tumor type; however, given that we 
+over all clusters. A natural clustering for this dataset would be based on tumor type; however, given that we 
 do not have this information, the idea is to produce new clusterings using an unsupervised approach. Furthermore, 
-we plan to analyze the sensitivity of the model performance to the clustering approach chosen, and interpret the results to try to understand which sets of features improve segmentation.
+we plan to analyze the sensitivity of the model performance to the clustering approach chosen, and interpret the 
+results to try to understand which sets of features improve segmentation.
 
 ## Navigating the Repo
 Radiomics results extracted from BraTS 2024 GoAT Training Dataset: /GoAT
