@@ -1,4 +1,12 @@
-Contains code for CSE547 Final Project.
+Under construction: Contains code for CSE547 Final Project.
+
+## Navigating the Repo
+Radiomics results extracted from BraTS 2024 GoAT Training Dataset: /GoAT
+
+Radiomics results extracted from BraTS 2023 Glioma Training Dataset: /Glioma
+
+Code for neural network: /neuralnet
+
 
 ## Project Motivation
 Current deep learning based tumor segmentation efforts are trained on highly-specialized datasets typically 
@@ -31,12 +39,6 @@ do not have this information, the idea is to produce new clusterings using an un
 we plan to analyze the sensitivity of the model performance to the clustering approach chosen, and interpret the 
 results to try to understand which sets of features improve segmentation.
 
-## Navigating the Repo
-Radiomics results extracted from BraTS 2024 GoAT Training Dataset: /GoAT
-
-Radiomics results extracted from BraTS 2023 Glioma Training Dataset: /Glioma
-
-Code for neural network: /neuralnet
 
 
 
