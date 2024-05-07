@@ -104,7 +104,10 @@ class LitGoAT(L.LightningModule):
         return loss
     
     def validation_step(self, batch, batch_idx):
-        pass
+        if self.calculate_eval_metrics == False:
+            
+
+        
     
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.model.parameters(), lr=self.init_lr, weight_decay = 0, amsgrad= True)
