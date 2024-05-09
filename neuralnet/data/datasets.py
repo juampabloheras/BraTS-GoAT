@@ -12,6 +12,50 @@ from torchvision import transforms
 
 
 class LoadDatasetswClusterID(Dataset):
+
+    '''
+    LoadDatasetswClusterID is a custom Dataset class designed for handling samples grouped by cluster IDs. 
+    Each sample belongs to a cluster, which is assigned via a `cluster_mapping` provided during initialization. 
+    Samples that do not have a specific cluster assignment are given a default value. 
+    The key features include:
+
+    - **Attributes:**
+        - `transforms`: Any data transformations applied to the samples.
+        - `normalized`: Indicates whether to normalize the data.
+        - `gt_provided`: Indicates whether ground truth labels are available.
+        - `cluster_mapping`: A dictionary mapping cluster IDs to lists of sample IDs.
+        - `reverse_mapping`: A dictionary that maps each sample ID back to its corresponding cluster ID.
+
+    - **Methods:**
+        - `__init__`: Initializes the dataset with a data path, transformations, a cluster mapping, and other optional parameters. Creates the `reverse_mapping` for efficient lookup of cluster IDs.
+        - `_get_matching_files`: Filters data files based on given partial file names.
+        - `one_hot`: Converts images to one-hot encoding.
+        - `__getitem__`: Retrieves a data sample based on the index and assigns a cluster ID.
+        - `__len__`: Returns the total number of data samples.
+
+    - **Usage Example:**
+
+    ```python
+    data_path = '/path/to/dataset/'
+    transforms = your_transforms_function  # Define your transformations here
+    cluster_mapping = {
+        1: ['sample1', 'sample2'],
+        2: ['sample3', 'sample4']
+    }
+
+    # Initialize the dataset with a mapping, where samples not found in the mapping will receive a default cluster ID.
+    dataset = LoadDatasetswClusterID(data_path, transforms, cluster_mapping)
+
+    # Access the first item to see its data and associated cluster
+    case_info, data, cluster_id = dataset[0]
+    print(f'Case Info: {case_info}, Cluster ID: {cluster_id}')
+    ```
+
+    - **Mapping Logic:**
+        - If a sample cannot be found in the `reverse_mapping`, a default cluster ID of `5000` is assigned and a warning is printed.
+        - This feature makes the code flexible such that if a sample is not clustered (as is the case with when testing), the Dataset class will still work.
+    '''
+
     def __init__(self, data_path, transforms, cluster_mapping,  normalized=True, gt_provided=True, partial_file_names = True):
         self.transforms = transforms
         self.normalized = normalized
@@ -58,6 +102,7 @@ class LoadDatasetswClusterID(Dataset):
 
         if clusterID is None:
             print(f"Sample {path} not found in any cluster's assignment list.")
+            clusterID = 5000 # big number to be assigned to unclustered samples.
 
 
         if self.gt_provided:
@@ -73,7 +118,6 @@ class LoadDatasetswClusterID(Dataset):
         x1, x2, x3, x4 = x1[None, ...], x2[None, ...],x3[None, ...],x4[None, ...]
         if self.gt_provided:
             y1 = y1[None, ...]
-        # print(x.shape, y.shape)#(1, 240, 240, 155) (1, 240, 240, 155)
 
         if self.gt_provided:
             x1, x2, x3, x4, y1 = self.transforms([x1, x2, x3, x4, y1])
