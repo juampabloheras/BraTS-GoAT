@@ -171,7 +171,7 @@ if __name__ == '__main__':
             model_str, partial_file_names, folds_dir, fold_no, cluster_dict, max_epochs, lr, power, eval_on_overlap, train_on_overlap) = parse_args() #definition in train_utils
 
 
-    model_architecture = LOSS_STR_TO_FUNC[model_str]
+    model_architecture = MODEL_STR_TO_FUNC[model_str]
     alpha = alpha
     init_lr = lr
     train_on_overlap = train_on_overlap
