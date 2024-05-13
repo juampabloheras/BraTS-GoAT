@@ -73,14 +73,17 @@ class LoadDatasetswClusterID(Dataset):
         # print("length of partial names", len(partial_file_names))
         self.count = 0
 
-        file_path = data_path[0]
+        file_path = data_path
 
 
         if isinstance(data_path,str):
             data_path = os.listdir(data_path)
 
+
+        ### code uses this case
         temp = []
         if isinstance(data_path,list):
+            file_path = data_path[0]
             for path in data_path:
                 temp += os.listdir(path)
             data_path = temp
@@ -112,7 +115,11 @@ class LoadDatasetswClusterID(Dataset):
     def __getitem__(self, index):
         path = self.paths[index]
 
+        print(f'path: {path}')
+
         sampleID = filename.split('-')[2].split('.')[0]
+
+        print(f'sampleID, {sampleID}')
         clusterID = self.reverse_mapping.get(sampleID, None) # returns clusterID asssigned to sample if it is assigned, None otherwise.
 
         if clusterID is None:
