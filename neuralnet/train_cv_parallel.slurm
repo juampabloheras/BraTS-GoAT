@@ -24,6 +24,8 @@ CKPT_DIR='None'
 BASE_OUT_DIR='/gscratch/kurtlab/juampablo/BraTS-GoAT/TESTS/test0513/out_dir'
 FOLDS_DIR='/gscratch/kurtlab/juampablo/BraTS-GoAT/CVFolds/cv-5-20240513-0'
 
+CLUSTER_DICT='/gscratch/kurtlab/juampablo/BraTS-GoAT/neuralnet/cluster_dict.pkl'
+
 # Training parameters
 LOSS=('mse' 'cross-entropy')
 WEIGHTS=(1 0.07177350190342198)
@@ -107,6 +109,7 @@ python3 train_GoAT.py \
     --partial_file_names_dir ${PARTIAL_FILE_NAMES_DIR[@]} \
     --folds_dir $FOLDS_DIR \
     --fold_no $FOLD_NO \
+    --cluster_dict $CLUSTER_DICT
     $TRAIN_ON_OVERLAP $EVAL_ON_OVERLAP
 EOT
 done

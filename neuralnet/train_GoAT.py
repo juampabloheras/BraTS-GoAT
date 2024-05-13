@@ -9,6 +9,8 @@ from torchvision import transforms
 from train_utils import load_fold_file
 from torch.utils.data import DataLoader
 
+import pickle
+
 import os
 from torch import optim, nn, utils, Tensor
 from torchvision.transforms import ToTensor
@@ -31,10 +33,10 @@ class LitGoAT(L.LightningModule):
         self.eval_on_overlap = eval_on_overlap
         self.loss_functions = loss_functions
         self.loss_weights = loss_weights
-        self.domain_criterion = nn.BCELoss()
+        self.domain_criterion = nn.CrossEntropyLoss()
         self.alpha = alpha
         self.weights = weights
-        self.power
+        self.power = power
         self.max_epochs = max_epochs
         self.save_hyperparameters()
 
@@ -92,20 +94,17 @@ class LitGoAT(L.LightningModule):
         self.log("backprop_loss", loss, on_step=False, on_epoch=True)
         self.log('epoch_loss', loss, on_step=False, on_epoch=True) # Logs mean loss per epoch
 
-
-        if true_classification == 1:
-            self.log("SSA_seg_loss", segmentation_loss)
-            self.log("SSA_classif_loss", classifier_loss)
-        elif true_classification == 0:
-            self.log("GLI_seg_loss", segmentation_loss)
-            self.log("GLI_classif_loss", classifier_loss)
-        else:
-            print("Classification not understood..")
+        try:
+            self.log(f'cluster{true_classification}_seg_loss', segmentation_loss)
+            self.log(f'cluster{true_classification}_classif_loss', classifier_loss)
+        except:
+            print(f"Classification {true_classification} not understood.")
 
         return loss
     
     def validation_step(self, batch, batch_idx):
         # if self.calculate_eval_metrics == False:
+        print("In Validation.....")
         pass
             
              
@@ -126,13 +125,14 @@ class LitGoAT(L.LightningModule):
 
 # Lightning Data Module    
 class BraTSDataModule(L.LightningDataModule):
-    def __init__(self, data_dir: str = "path/to/dir", batch_size: int = 1, test_data_dir: str = "path/to/dir", folds_dir: str = "path/to/dir", fold_no: int = 0):
+    def __init__(self, data_dir: str = "path/to/dir", batch_size: int = 1, test_data_dir: str = "path/to/dir", folds_dir: str = "path/to/dir", fold_no: int = 0, cluster_mapping: dict = {}):
         super().__init__()
         self.data_dir = data_dir
         self.test_data_dir = test_data_dir
         self.batch_size = batch_size
         self.folds_dir = folds_dir
         self.fold_no = fold_no
+        self.cluster_mapping = cluster_mapping
         self.transforms = transforms.Compose([trans.CenterCropBySize([128,192,128]), 
                                               trans.NumpyType((np.float32, np.float32,np.float32, np.float32,np.float32)),
                                               ])
@@ -168,7 +168,7 @@ class BraTSDataModule(L.LightningDataModule):
 if __name__ == '__main__':
 
     (alpha, train_dir, test_dir, ckpt_dir, out_dir, loss_str, weights, loss_weights, 
-            model_str, partial_file_names, folds_dir, fold_no, max_epochs, lr, power, eval_on_overlap, train_on_overlap) = parse_args()
+            model_str, partial_file_names, folds_dir, fold_no, cluster_dict, max_epochs, lr, power, eval_on_overlap, train_on_overlap) = parse_args() #definition in train_utils
 
 
     model_architecture = LOSS_STR_TO_FUNC[model_str]
@@ -180,6 +180,7 @@ if __name__ == '__main__':
     loss_weights = loss_weights
     power =  power
     max_epochs = max_epochs
+    cluster_dict_path = cluster_dict
 
     data_dir = train_dir
     batch_size = 1
@@ -187,13 +188,18 @@ if __name__ == '__main__':
     folds_dir = folds_dir
     fold_no = fold_no
 
+    # Load cluster mapping
+    with open(cluster_dict_path, 'rb') as file:
+        cluster_mapping = pickle.load(file)
+
+    # Make checkpoint directory
     new_ckpt_dir = os.path.join(out_dir, 'new_checkpoints')
     if not os.path.exists(new_ckpt_dir):
         os.makedirs(new_ckpt_dir)
         os.system('chmod a+rwx ' + new_ckpt_dir)
 
     # Instantiate DataModule
-    dm = BraTSDataModule(data_dir = data_dir, batch_size = batch_size, test_data_dir = test_data_dir, folds_dir = folds_dir, fold_no = fold_no)
+    dm = BraTSDataModule(data_dir = data_dir, batch_size = batch_size, test_data_dir = test_data_dir, folds_dir = folds_dir, fold_no = fold_no, cluster_mapping=cluster_mapping)
     
     # Instantiate Trainer
     seed_everything(42, workers = True) # sets seeds for numpy, torch and python.random.
