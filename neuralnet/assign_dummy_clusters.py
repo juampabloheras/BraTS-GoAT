@@ -14,12 +14,11 @@ def assign_dummy_clusters(in_dir, out_dir, num_clusters, overwrite = False):
     file_names = os.listdir(in_dir)
     random.shuffle(file_names)
     clusters = np.array_split(file_names, num_clusters)
+    clusters = [list(cluster) for cluster in clusters]
+
     cluster_lengths = [len(cluster) for cluster in clusters]
 
-    cluster_mapping = {}
-    for i, cluster_list in enumerate(clusters):
-        cluster_mapping[i] = cluster_list
-
+    cluster_mapping = {i: cluster for i, cluster in enumerate(clusters)}
 
     if os.path.exists(save_path) and not overwrite:
         print(f"File {save_path} already exists. Use overwrite=True to overwrite the file.")
