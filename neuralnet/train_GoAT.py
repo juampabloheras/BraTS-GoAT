@@ -144,26 +144,24 @@ class BraTSDataModule(L.LightningDataModule):
         if stage == 'fit':
             self.brats_train = LoadDatasetswClusterID(self.data_dir, self.transforms, self.cluster_mapping,  normalized=True, gt_provided=True, partial_file_names = train_file_names)
             self.brats_val = LoadDatasetswClusterID(self.data_dir, self.transforms, self.cluster_mapping,  normalized=True, gt_provided=True, partial_file_names = val_file_names)
+
+            print(self.brats_train)
         if stage == 'test':
             self.brats_test = LoadDatasetswClusterID(self.data_dir, self.transforms, self.cluster_mapping,  normalized=True, gt_provided= True, partial_file_names = os.listdir(self.test_data_dir))
 
     def train_dataloader(self):
-        return DataLoader(self.brats_train, batch_size=self.batch_size)
+        return DataLoader(self.brats_train, batch_size=self.batch_size, num_workers=3)
 
     def val_dataloader(self):
-        return DataLoader(self.brats_val, batch_size=self.batch_size) 
+        return DataLoader(self.brats_val, batch_size=self.batch_size, num_workers=3) 
 
     def test_dataloader(self):
-        return DataLoader(self.brats_test, batch_size=self.batch_size) 
+        return DataLoader(self.brats_test, batch_size=self.batch_size, num_workers=3) 
 
     @staticmethod
     def load_file_names(data_dir, folds_dir, fold_no):
         val_dir = os.path.join(folds_dir , sorted( os.listdir(folds_dir) )[fold_no])
         val_file_names = load_fold_file(val_dir)
-
-        print(f"Data dir, type: {data_dir}, {type(data_dir)}")
-
-        # train_file_names = [name for name in os.listdir(data_dir) if name not in val_file_names]
 
         # List comprehension, indented for readability
         train_file_names = [
