@@ -8,8 +8,8 @@
 #SBATCH --mem=10G
 #SBATCH --ntasks=1
 #SBATCH --time=00:10:00
-#SBATCH --output=/gscratch/kurtlab/juampablo/bratsGoAT/TESTS/test0501/output_train.txt
-#SBATCH --error=/gscratch/kurtlab/juampablo/bratsGoAT/TESTS/test0501/error_train.txt
+#SBATCH --output=/gscratch/kurtlab/juampablo/bratsGoAT/TESTS/test0513/output_train.txt
+#SBATCH --error=/gscratch/kurtlab/juampablo/bratsGoAT/TESTS/test0513/error_train.txt
 #SBATCH --chdir=/gscratch/kurtlab/juampablo/bratsGoAT/
 
 
@@ -21,8 +21,8 @@ NUM_FOLDS=5
 TRAIN_DIR=('/gscratch/scrubbed/juampablo/BraTS-GoAT/DATA/training')
 TEST_DIR='/gscratch/scrubbed/juampablo/BraTS-GoAT/DATA/test'
 CKPT_DIR='None'
-BASE_OUT_DIR='/gscratch/kurtlab/juampablo/bratsGoAT/TESTS/test0501/out_dir'
-FOLDS_DIR='/gscratch/kurtlab/juampablo/bratsGoAT/CVFolds/cv-5-20240501-0'
+BASE_OUT_DIR='/gscratch/kurtlab/juampablo/bratsGoAT/TESTS/test0513/out_dir'
+FOLDS_DIR='/gscratch/kurtlab/juampablo/bratsGoAT/CVFolds/cv-5-20240513-0'
 
 # Training parameters
 LOSS=('mse' 'cross-entropy')
