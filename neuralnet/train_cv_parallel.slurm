@@ -19,7 +19,7 @@ NUM_FOLDS=5
 ### Parameters that don't change across folds
 # Directories
 TRAIN_DIR=('/gscratch/scrubbed/juampablo/BraTS-GoAT/DATA/training')
-TEST_DIR='/gscratch/scrubbed/juampablo/BraTS-GoAT/DATA/test'
+TEST_DIR='/gscratch/scrubbed/juampablo/BraTS-GoAT/DATA/validation'
 CKPT_DIR='None'
 BASE_OUT_DIR='/gscratch/kurtlab/juampablo/BraTS-GoAT/TESTS/test0513/out_dir'
 FOLDS_DIR='/gscratch/kurtlab/juampablo/BraTS-GoAT/CVFolds/cv-5-20240513-0'
@@ -109,7 +109,7 @@ python3 train_GoAT.py \
     --partial_file_names_dir ${PARTIAL_FILE_NAMES_DIR[@]} \
     --folds_dir $FOLDS_DIR \
     --fold_no $FOLD_NO \
-    --cluster_dict $CLUSTER_DICT
+    --cluster_dict $CLUSTER_DICT \
     $TRAIN_ON_OVERLAP $EVAL_ON_OVERLAP
 EOT
 done
