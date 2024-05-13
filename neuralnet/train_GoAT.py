@@ -26,8 +26,8 @@ from train_utils import *
 
 
 # Suppress warnings
-warnings.filterwarnings("ignore", message="A NumPy version >=1.17.3 and <1.25.0 is required for this version of SciPy")
-warnings.filterwarnings("ignore", message="Failed to load image Python extension: libtorch_cuda_cu.so")
+warnings.filterwarnings("ignore", category=UserWarning, message=".*A NumPy version >=1.17.3 and <1.25.0 is required for this version of SciPy.*")
+warnings.filterwarnings("ignore", category=UserWarning, message=".*Failed to load image Python extension: libtorch_cuda_cu.so.*")
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 
