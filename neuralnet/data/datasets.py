@@ -116,7 +116,7 @@ class LoadDatasetswClusterID(Dataset):
 
         print(f'sampleID, {sampleID}')
         clusterID = self.reverse_mapping.get(sampleID, None) # returns clusterID asssigned to sample if it is assigned, None otherwise.
-        print(f'clusterID, {sampleID}')
+        print(f'clusterID, {clusterID}')
 
         if clusterID is None:
             print(f"Sample {path} not found in any cluster's assignment list.")
