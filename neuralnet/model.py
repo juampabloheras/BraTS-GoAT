@@ -256,8 +256,6 @@ class DANNUNet3DExtendedLatent(nn.Module):
     def forward(self, input, alpha = 1):
         segmentation, latent, x1, x2, x3, x4, x5, x6 = self.UNet3D(input)
 
-        extended_latent = torch.cat([latent, x1, x2, x3, x4, x5, x6], dim=1) # concatenate latent + x1, x2, ... , x6
-
         print("Shape of latent:", latent.shape)
         print("Shape of x1:", x1.shape)
         print("Shape of x2:", x2.shape)
@@ -265,6 +263,8 @@ class DANNUNet3DExtendedLatent(nn.Module):
         print("Shape of x4:", x4.shape)
         print("Shape of x5:", x5.shape)
         print("Shape of x6:", x6.shape)
+
+        extended_latent = torch.cat([latent, x1, x2, x3, x4, x5, x6], dim=1) # concatenate latent + x1, x2, ... , x6
 
 
         if alpha is not None:
