@@ -73,10 +73,8 @@ class LoadDatasetswClusterID(Dataset):
         # print("length of partial names", len(partial_file_names))
         self.count = 0
 
-        file_path = data_path
+        file_path = data_path[0]
 
-        print(type(data_path))
-        print(f"data path: {data_path}")
 
         if isinstance(data_path,str):
             data_path = os.listdir(data_path)
@@ -86,9 +84,6 @@ class LoadDatasetswClusterID(Dataset):
             for path in data_path:
                 temp += os.listdir(path)
             data_path = temp
-
-        print(type(data_path))
-        print(f"data path afters: {data_path}")
 
         if not isinstance(data_path, (list, tuple)):
             data_path = [data_path]
