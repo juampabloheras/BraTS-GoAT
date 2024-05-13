@@ -18,7 +18,7 @@ NUM_FOLDS=5
 
 ### Parameters that don't change across folds
 # Directories
-TRAIN_DIR=('/gscratch/scrubbed/juampablo/BraTS-GoAT/DATA/training')
+TRAIN_DIR='/gscratch/scrubbed/juampablo/BraTS-GoAT/DATA/training'
 TEST_DIR='/gscratch/scrubbed/juampablo/BraTS-GoAT/DATA/validation'
 CKPT_DIR='None'
 BASE_OUT_DIR='/gscratch/kurtlab/juampablo/BraTS-GoAT/TESTS/test0513/out_dir'
