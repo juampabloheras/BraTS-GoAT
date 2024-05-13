@@ -251,7 +251,7 @@ class DANNUNet3DExtendedLatent(nn.Module):
         nf = 8
 
         self.UNet3D = U_Net3D(nf, img_ch=img_ch, output_ch= output_ch)
-        self.classifier = domain_classifier(CH_IN=nf*35, output_ch = num_domains)
+        self.classifier = domain_classifier(CH_IN=nf*35, num_domains = num_domains)
 
     def forward(self, input, alpha = 1):
         segmentation, latent, x1, x2, x3, x4, x5, x6 = self.UNet3D(input)
@@ -277,7 +277,7 @@ class DANNUNet3D(nn.Module):
         nf = 8
 
         self.UNet3D = U_Net3D(nf, img_ch=img_ch, output_ch= output_ch)
-        self.classifier = domain_classifier(CH_IN=nf*12, output_ch = num_domains)
+        self.classifier = domain_classifier(CH_IN=nf*12, num_domains = num_domains)
 
     def forward(self, input, alpha = 1):
         segmentation, latent, x1, x2, x3, x4, x5, x6 = self.UNet3D(input)
