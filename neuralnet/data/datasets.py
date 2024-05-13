@@ -95,14 +95,9 @@ class LoadDatasetswClusterID(Dataset):
         
         # print('data_path', data_path)
         for filename in data_path:
-            print(f"Filename: {filename}")
             if any (partial_name in filename for partial_name in partial_file_names) and filename not in matching_files:
                 matching_files.append(file_path + '/' + filename) 
                 self.count += 1
-
-
-        print(f"Count: {self.count}")
-
 
         return matching_files
 
@@ -117,8 +112,8 @@ class LoadDatasetswClusterID(Dataset):
 
         print(f'path: {path}')
 
-        sampleID = filename.split('-')[2].split('.')[0]
-
+        sampleID = path.split('/')[-1]
+        
         print(f'sampleID, {sampleID}')
         clusterID = self.reverse_mapping.get(sampleID, None) # returns clusterID asssigned to sample if it is assigned, None otherwise.
 
