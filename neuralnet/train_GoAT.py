@@ -20,7 +20,16 @@ from lightning.pytorch.cli import LightningCLI
 from lightning.pytorch import Trainer, seed_everything
 from lightning.pytorch.callbacks import ModelCheckpoint
 
+import warnings
+
 from train_utils import *
+
+
+# Suppress warnings
+warnings.filterwarnings("ignore", message="A NumPy version >=1.17.3 and <1.25.0 is required for this version of SciPy")
+warnings.filterwarnings("ignore", message="Failed to load image Python extension: libtorch_cuda_cu.so")
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+
 
 
 # Lightning Module 
@@ -127,7 +136,7 @@ class LitGoAT(L.LightningModule):
 class BraTSDataModule(L.LightningDataModule):
     def __init__(self, data_dir: str = "path/to/dir", batch_size: int = 1, test_data_dir: str = "path/to/dir", folds_dir: str = "path/to/dir", fold_no: int = 0, cluster_mapping: dict = {}):
         super().__init__()
-        self.data_dir = data_dir[0] # because data_dir is currently setup as list, and i only want the first item
+        self.data_dir = data_dir # because data_dir is currently setup as list, and i only want the first item
         self.test_data_dir = test_data_dir
         self.batch_size = batch_size
         self.folds_dir = folds_dir
