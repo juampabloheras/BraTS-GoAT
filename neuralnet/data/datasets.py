@@ -110,13 +110,9 @@ class LoadDatasetswClusterID(Dataset):
     def __getitem__(self, index):
         path = self.paths[index]
 
-        print(f'path: {path}')
-
+        # Obtain cluster ID
         sampleID = path.split('/')[-1]
-
-        print(f'sampleID, {sampleID}')
         clusterID = self.reverse_mapping.get(sampleID, None) # returns clusterID asssigned to sample if it is assigned, None otherwise.
-        print(f'clusterID, {clusterID}')
 
         if clusterID is None:
             print(f"Sample {path} not found in any cluster's assignment list.")

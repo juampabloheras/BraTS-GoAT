@@ -62,6 +62,10 @@ class LitGoAT(L.LightningModule):
 
             loss += temp * loss_weights[n]
         return loss
+    
+    def forward(self, x): # Forward pass used for inference, not training
+        x = self.model(x, self.alpha)
+        return x
 
     def training_step(self, batch, batch_idx): 
 
@@ -89,7 +93,7 @@ class LitGoAT(L.LightningModule):
 
         x_in = torch.cat((x1, x2, x3, x4), dim=1)
 
-        output, pred_classification, latent = self(x_in, self.alpha) # equivalent to self.model(x_in)
+        output, pred_classification, latent = self(x_in, self.alpha) # equivalent to self.model(x_in, self.alpha) and self.forward(x_in)
         output = output.float()
 
         segmentation_loss = self.compute_loss(output, seg, self.loss_functions, self.weights)
@@ -148,10 +152,7 @@ class BraTSDataModule(L.LightningDataModule):
 
 
     def setup(self, stage: str):
-        train_file_names, val_file_names = self.load_file_names(self.data_dir, self.folds_dir, self.fold_no)
-
-        print(f'len train file names: {len(train_file_names)}, len val file names: {len(val_file_names)}')
-        
+        train_file_names, val_file_names = self.load_file_names(self.data_dir, self.folds_dir, self.fold_no)        
         if stage == 'fit':
             self.brats_train = LoadDatasetswClusterID(self.data_dir, self.transforms, self.cluster_mapping,  normalized=True, gt_provided=True, partial_file_names = train_file_names)
             self.brats_val = LoadDatasetswClusterID(self.data_dir, self.transforms, self.cluster_mapping,  normalized=True, gt_provided=True, partial_file_names = val_file_names)
