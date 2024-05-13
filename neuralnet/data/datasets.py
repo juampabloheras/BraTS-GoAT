@@ -76,18 +76,15 @@ class LoadDatasetswClusterID(Dataset):
         file_path = data_path
 
         print(type(data_path))
+        print(data_path)
 
         if isinstance(data_path,str):
             data_path = os.listdir(data_path)
 
-        temp = []
-        if isinstance(data_path,list):
-            for path in data_path:
-                temp += path
-            data_path = temp
-
         if not isinstance(data_path, (list, tuple)):
             data_path = [data_path]
+
+
         
         # print('data_path', data_path)
         for filename in data_path:
