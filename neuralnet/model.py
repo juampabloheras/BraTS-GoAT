@@ -251,20 +251,22 @@ class DANNUNet3DExtendedLatent(nn.Module):
         nf = 8
 
         self.UNet3D = U_Net3D(nf, img_ch=img_ch, output_ch= output_ch)
-        self.classifier = domain_classifier(CH_IN=nf*35, num_domains = num_domains)
+        self.classifier = domain_classifier(CH_IN=nf*47, num_domains = num_domains) # nf*47 is sum of channels in extended latent
 
     def forward(self, input, alpha = 1):
         segmentation, latent, x1, x2, x3, x4, x5, x6 = self.UNet3D(input)
 
-        print("Shape of latent:", latent.shape)
-        print("Shape of x1:", x1.shape)
-        print("Shape of x2:", x2.shape)
-        print("Shape of x3:", x3.shape)
-        print("Shape of x4:", x4.shape)
-        print("Shape of x5:", x5.shape)
-        print("Shape of x6:", x6.shape)
+        # Flatten each tensor
+        latent_flat = latent.view(latent.size(0), -1)
+        x1_flat = x1.view(x1.size(0), -1)
+        x2_flat = x2.view(x2.size(0), -1)
+        x3_flat = x3.view(x3.size(0), -1)
+        x4_flat = x4.view(x4.size(0), -1)
+        x5_flat = x5.view(x5.size(0), -1)
+        x6_flat = x6.view(x6.size(0), -1)
 
-        extended_latent = torch.cat([latent, x1, x2, x3, x4, x5, x6], dim=1) # concatenate latent + x1, x2, ... , x6
+        # Concatenate the flattened tensors
+        extended_latent = torch.cat([latent_flat, x1_flat, x2_flat, x3_flat, x4_flat, x5_flat, x6_flat], dim=1)
 
 
         if alpha is not None:
