@@ -207,7 +207,8 @@ if __name__ == '__main__':
     trainer = Trainer(fast_dev_run=1, max_epochs=max_epochs, default_root_dir=out_dir, deterministic = True) # Will automatically train with system devices and the maximum number of GPUs available (see documentation here: https://lightning.ai/docs/pytorch/stable/common/trainer.html)
 
     model = LitGoAT(model_architecture, alpha, init_lr, train_on_overlap, eval_on_overlap, loss_functions, loss_weights, weights, power, max_epochs)
-    if ckpt_dir is not None:
+
+    if os.path.exists(ckpt_dir):
         model = LitGoAT.load_from_checkpoint(ckpt_dir)
 
     trainer.fit(model, datamodule=dm)
