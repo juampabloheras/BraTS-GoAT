@@ -163,7 +163,16 @@ class BraTSDataModule(L.LightningDataModule):
 
         print(f"Data dir, type: {data_dir}, {type(data_dir)}")
 
-        train_file_names = [name for name in os.listdir(data_dir) if name not in val_file_names]
+        # train_file_names = [name for name in os.listdir(data_dir) if name not in val_file_names]
+
+        # List comprehension, indented for readability
+        train_file_names = [
+                file_name
+                for directory in data_dir
+                    for file_name in os.listdir(directory)
+                        if file_name not in val_file_names
+            ] 
+        
         return train_file_names, val_file_names
     
 
