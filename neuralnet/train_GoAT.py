@@ -160,6 +160,9 @@ class BraTSDataModule(L.LightningDataModule):
     def load_file_names(data_dir, folds_dir, fold_no):
         val_dir = os.path.join(folds_dir , sorted( os.listdir(folds_dir) )[fold_no])
         val_file_names = load_fold_file(val_dir)
+
+        print(f"Data dir, type: {data_dir}, {type(data_dir)}")
+
         train_file_names = [name for name in os.listdir(data_dir) if name not in val_file_names]
         return train_file_names, val_file_names
     
