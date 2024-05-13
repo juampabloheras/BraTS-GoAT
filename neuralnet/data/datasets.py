@@ -53,7 +53,7 @@ class LoadDatasetswClusterID(Dataset):
 
     - **Mapping Logic:**
         - If a sample cannot be found in the `reverse_mapping`, a default cluster ID of `5000` is assigned and a warning is printed.
-        - This feature makes the code flexible such that if a sample is not clustered (as is the case with when testing), the Dataset class will still work.
+        - This feature makes the code flexible such that if a sample is not clustered (as is the case during testing), the Dataset class will still work.
     '''
 
     def __init__(self, data_path, transforms, cluster_mapping,  normalized=True, gt_provided=True, partial_file_names = True):

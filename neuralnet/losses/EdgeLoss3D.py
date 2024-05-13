@@ -12,7 +12,10 @@ import numpy as np
 import torch
 import torch.nn as nn
 import matplotlib.pyplot as plt
-import losses as lf2
+# import losses as lf2 ## Changed this
+
+from losses import losses as lf2 # in same directory
+
 
 EPSILON = 1E-6
 

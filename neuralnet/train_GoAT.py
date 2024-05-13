@@ -5,6 +5,7 @@ from data import trans
 from data.datasets import LoadDatasetswDomain
 
 import transforms ####
+from torchvision import transforms
 from train_utils import load_fold_file
 from torch.utils.data import DataLoader
 

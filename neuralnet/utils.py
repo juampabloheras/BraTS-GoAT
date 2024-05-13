@@ -3,7 +3,6 @@
 
 import torch.nn as nn
 import losses.new_losses as lf # in same dir
-from losses import lf2 # in same directory
 from losses import EdgeLoss3D # in same directory
 import torch
 import numpy as np
@@ -14,6 +13,9 @@ import os
 from skimage.metrics import structural_similarity as ssim
 from sklearn.manifold import TSNE
 from sklearn.preprocessing import LabelEncoder
+
+
+from losses import losses as lf2 # in same directory
 
 
 
