@@ -270,9 +270,8 @@ class DANNUNet3DExtendedLatent(nn.Module):
 
 
         if alpha is not None:
-            reversed_latent = GradReverse.apply(latent, alpha) # reverse gradient at the bottleneck
-            extended_latent = torch.cat([reversed_latent, x1, x2, x3, x4, x5, x6], dim=1) 
-            classification = self.classifier(extended_latent) # classify using the latent + x1, x2, ... , x6
+            reversed_latent = GradReverse.apply(extended_latent, alpha) # reverse gradient at the bottleneck
+            classification = self.classifier(reversed_latent) # classify using the latent + x1, x2, ... , x6
 
         else:
             # If alpha is not provided, perform regular classification
