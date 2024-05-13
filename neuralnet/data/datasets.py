@@ -70,7 +70,7 @@ class LoadDatasetswClusterID(Dataset):
 
     def _get_matching_files(self, data_path, partial_file_names):
         matching_files = []
-        # print("length of partial names", len(partial_file_names))
+        print("length of partial names", len(partial_file_names))
         self.count = 0
 
         file_path = data_path
