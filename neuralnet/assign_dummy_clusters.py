@@ -8,7 +8,7 @@ import pickle
 
 
 # Function to assign dummy clusters to data for debugging
-def assign_dummy_clusters(in_dir, out_dir, num_clusters, overwrite = False):
+def assign_dummy_clusters(in_dir, save_path, num_clusters, overwrite = False):
     
     # Load data, shuffle data list, and split clusters
     file_names = os.listdir(in_dir)
