@@ -22,7 +22,7 @@ TRAIN_DIR=('/gscratch/scrubbed/juampablo/BraTS-GoAT/DATA/training')
 TEST_DIR='/gscratch/scrubbed/juampablo/BraTS-GoAT/DATA/validation'
 CKPT_DIR='None'
 BASE_OUT_DIR='/gscratch/kurtlab/juampablo/BraTS-GoAT/TESTS/test0513/out_dir'
-FOLDS_DIR='/gscratch/kurtlab/juampablo/BraTS-GoAT/CVFolds/cv-5-20240513-0'
+FOLDS_DIR='/gscratch/kurtlab/juampablo/BraTS-GoAT/neuralnet/CVFolds/cv-5-20240513-0'
 
 CLUSTER_DICT='/gscratch/kurtlab/juampablo/BraTS-GoAT/neuralnet/cluster_dict.pkl'
 
