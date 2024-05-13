@@ -81,14 +81,14 @@ class LoadDatasetswClusterID(Dataset):
         if isinstance(data_path,str):
             data_path = os.listdir(data_path)
 
-        temp = 0
+        temp = []
         if isinstance(data_path,list):
             for path in data_path:
                 temp += os.listdir(path)
             data_path = temp
 
         print(type(data_path))
-        print(f"data path after: {data_path}")
+        print(f"data path afters: {data_path}")
 
         if not isinstance(data_path, (list, tuple)):
             data_path = [data_path]
