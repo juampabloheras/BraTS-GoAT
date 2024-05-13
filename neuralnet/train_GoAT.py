@@ -127,7 +127,7 @@ class LitGoAT(L.LightningModule):
 class BraTSDataModule(L.LightningDataModule):
     def __init__(self, data_dir: str = "path/to/dir", batch_size: int = 1, test_data_dir: str = "path/to/dir", folds_dir: str = "path/to/dir", fold_no: int = 0, cluster_mapping: dict = {}):
         super().__init__()
-        self.data_dir = data_dir
+        self.data_dir = data_dir[0] # because data_dir is currently setup as list, and i only want the first item
         self.test_data_dir = test_data_dir
         self.batch_size = batch_size
         self.folds_dir = folds_dir
