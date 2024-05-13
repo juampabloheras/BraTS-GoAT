@@ -247,7 +247,7 @@ class DANNEncoderDecoder3D(nn.Module):
 
 class DANNUNet3DExtendedLatent(nn.Module):
     def __init__(self, img_ch = 4, output_ch = 3, num_domains = 3):
-        super.__init__()
+        super().__init__()
         nf = 8
 
         self.UNet3D = U_Net3D(nf, img_ch=img_ch, output_ch= output_ch)
@@ -273,7 +273,7 @@ class DANNUNet3DExtendedLatent(nn.Module):
 
 class DANNUNet3D(nn.Module):
     def __init__(self, img_ch = 4, output_ch = 3, num_domains = 3):
-        super.__init__()
+        super().__init__()
         nf = 8
 
         self.UNet3D = U_Net3D(nf, img_ch=img_ch, output_ch= output_ch)
