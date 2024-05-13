@@ -1,4 +1,4 @@
-#!/bin/bash
+#/bin/bash
 
 #SBATCH --job-name=train-cv-GoAT
 #SBATCH --mail-user=jehr@uw.edu

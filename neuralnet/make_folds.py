@@ -60,3 +60,4 @@ if __name__ == '__main__':
     out_dir = '/gscratch/kurtlab/brats2023/repos/juampablo/brats2023/brats2023/base/CVFolds'
     num_folds = 10
     make_folds(in_dir, out_dir, num_folds)
+
