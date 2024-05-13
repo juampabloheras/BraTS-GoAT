@@ -140,6 +140,8 @@ class BraTSDataModule(L.LightningDataModule):
 
     def setup(self, stage: str):
         train_file_names, val_file_names = self.load_file_names(self.data_dir, self.folds_dir, self.fold_no)
+
+        print(f'len train file names: {len(train_file_names)}, len val file names: {len(val_file_names)}')
         
         if stage == 'fit':
             self.brats_train = LoadDatasetswClusterID(self.data_dir, self.transforms, self.cluster_mapping,  normalized=True, gt_provided=True, partial_file_names = train_file_names)
