@@ -1,5 +1,11 @@
 import argparse
 
+def load_fold_file(file_path):
+    with open(file_path, 'r') as file:
+        lines = [line.strip() for line in file.readlines()]
+    return lines
+
+
 def none_or_int(value):
     if value.lower() == 'none':
         return None
