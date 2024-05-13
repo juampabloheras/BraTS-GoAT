@@ -56,8 +56,8 @@ def make_folds(in_dir, out_dir, num_folds):
     print(f"Fold sizes: {fold_lengths}")
 
 if __name__ == '__main__':
-    in_dir = '/gscratch/kurtlab/brats2023/data/brats-ssa/Processed-NEWTrainingData'
-    out_dir = '/gscratch/kurtlab/brats2023/repos/juampablo/brats2023/brats2023/base/CVFolds'
-    num_folds = 10
+    in_dir = '/gscratch/scrubbed/juampablo/BraTS-GoAT/DATA/training'
+    out_dir = '/gscratch/kurtlab/juampablo/BraTS-GoAT/neuralnet/CVFolds'
+    num_folds = 5
     make_folds(in_dir, out_dir, num_folds)
 
