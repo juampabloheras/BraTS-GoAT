@@ -93,7 +93,7 @@ class LitGoAT(L.LightningModule):
 
         x_in = torch.cat((x1, x2, x3, x4), dim=1)
 
-        output, pred_classification, latent = self(x_in, self.alpha) # equivalent to self.model(x_in, self.alpha) and self.forward(x_in)
+        output, pred_classification, latent = self.model(x_in, self.alpha) # equivalent to self.model(x_in, self.alpha) and self.forward(x_in)
         output = output.float()
 
         segmentation_loss = self.compute_loss(output, seg, self.loss_functions, self.weights)
