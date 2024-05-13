@@ -2,7 +2,7 @@ import argparse
 import torch
 from utils import *
 from data import trans
-from data.datasets import LoadDatasetswDomain
+from data.datasets import LoadDatasetswClusterID
 
 import transforms ####
 from torchvision import transforms
@@ -142,10 +142,10 @@ class BraTSDataModule(L.LightningDataModule):
         train_file_names, val_file_names = self.load_file_names(self.data_dir, self.folds_dir, self.fold_no)
         
         if stage == 'fit':
-            self.brats_train = LoadDatasetswDomain(self.data_dir, self.transforms, train_file_names)
-            self.brats_val = LoadDatasetswDomain(self.data_dir, self.transforms, val_file_names)
+            self.brats_train = LoadDatasetswClusterID(self.data_dir, self.transforms, self.cluster_mapping,  normalized=True, gt_provided=True, partial_file_names = train_file_names)
+            self.brats_val = LoadDatasetswClusterID(self.data_dir, self.transforms, self.cluster_mapping,  normalized=True, gt_provided=True, partial_file_names = val_file_names)
         if stage == 'test':
-            self.brats_test = LoadDatasetswDomain(self.test_data_dir, self.transforms, os.listdir(self.test_data_dir)) # currently uses val NEED TO CHANGE to test
+            self.brats_test = LoadDatasetswClusterID(self.data_dir, self.transforms, self.cluster_mapping,  normalized=True, gt_provided= True, partial_file_names = os.listdir(self.test_data_dir))
 
     def train_dataloader(self):
         return DataLoader(self.brats_train, batch_size=self.batch_size)
@@ -198,7 +198,7 @@ if __name__ == '__main__':
     # Instantiate Trainer
     seed_everything(42, workers = True) # sets seeds for numpy, torch and python.random.
     checkpoint_callback = ModelCheckpoint(every_n_epochs = 2, dirpath=new_ckpt_dir, filename="train-GoAT-{epoch:02d}-{seg_loss:.2f}")
-    trainer = Trainer(max_epochs=max_epochs, default_root_dir=out_dir, deterministic = True) # Will automatically train with system devices and the maximum number of GPUs available (see documentation here: https://lightning.ai/docs/pytorch/stable/common/trainer.html)
+    trainer = Trainer(fast_dev_run=1, max_epochs=max_epochs, default_root_dir=out_dir, deterministic = True) # Will automatically train with system devices and the maximum number of GPUs available (see documentation here: https://lightning.ai/docs/pytorch/stable/common/trainer.html)
 
     model = LitGoAT(model_architecture, alpha, init_lr, train_on_overlap, eval_on_overlap, loss_functions, loss_weights, weights, power, max_epochs)
     if ckpt_dir is not None:

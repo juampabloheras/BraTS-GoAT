@@ -227,7 +227,7 @@ class DANNEncoderDecoder3D(nn.Module):
         nf = 8 # Model size factor
 
         self.autoencoder = EncoderDecoder3D(nf, img_ch=img_ch, output_ch = output_ch)
-        self.classifier = domain_classifier(CH_IN=nf*12, output_ch = num_domains)
+        self.classifier = domain_classifier(CH_IN=nf*12, num_domains = num_domains)
 
     def forward(self, input, alpha = 1): # Default alpha value of 1, if None, will not implement gradient reversal
         
