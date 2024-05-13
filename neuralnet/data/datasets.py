@@ -70,7 +70,7 @@ class LoadDatasetswClusterID(Dataset):
 
     def _get_matching_files(self, data_path, partial_file_names):
         matching_files = []
-        print("length of partial names", len(partial_file_names))
+        # print("length of partial names", len(partial_file_names))
         self.count = 0
 
         file_path = data_path
@@ -82,10 +82,15 @@ class LoadDatasetswClusterID(Dataset):
         
         # print('data_path', data_path)
         for filename in data_path:
+            print(f"Filename: {filename}")
             if any (partial_name in filename for partial_name in partial_file_names) and filename not in matching_files:
                 matching_files.append(file_path + '/' + filename) 
                 self.count += 1
-        print(self.count)
+
+
+        print(f"Count: {self.count}")
+
+
         return matching_files
 
     def one_hot(self, img, C):
