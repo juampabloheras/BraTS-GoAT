@@ -99,8 +99,10 @@ class LitGoAT(L.LightningModule):
 
         print(f'Output shape: {output.shape}')
         print(f'Segmentation shape: {seg.shape}')
+        print(f'Mask shape: {seg.shape}')
 
-        segmentation_loss = self.compute_loss(output, seg, self.loss_functions, self.weights)
+
+        segmentation_loss = self.compute_loss(output, mask, self.loss_functions, self.weights)
         classifier_loss = self.domain_criterion(pred_classification, true_classification)
 
         loss = self.loss_weights[0]*segmentation_loss + self.loss_weights[1]*classifier_loss
