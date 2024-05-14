@@ -15,6 +15,7 @@ from sklearn.manifold import TSNE
 from sklearn.preprocessing import LabelEncoder
 
 
+from losses import losses as lf2 # in same directory
 
 
 
