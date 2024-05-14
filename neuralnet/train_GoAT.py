@@ -25,12 +25,6 @@ import warnings
 from train_utils import *
 
 
-# Suppress warnings
-warnings.filterwarnings("ignore", category=UserWarning, message=".*A NumPy version >=1.17.3 and <1.25.0 is required for this version of SciPy.*")
-warnings.filterwarnings("ignore", category=UserWarning, message=".*Failed to load image Python extension: libtorch_cuda_cu.so.*")
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-
-
 
 # Lightning Module 
 class LitGoAT(L.LightningModule):
@@ -52,13 +46,13 @@ class LitGoAT(L.LightningModule):
 
 
     @staticmethod
-    def compute_loss(output, seg, loss_functs, loss_weights):
+    def compute_loss(output, mask, loss_functs, loss_weights):
         """Computes weighted loss between model output and ground truth, summed across each region."""
         loss = 0.
         for n, loss_function in enumerate(loss_functs):      
             temp = 0
             for i in range(3):
-                temp += loss_function(output[:,i:i+1], seg[:,i:i+1])
+                temp += loss_function(output[:,i:i+1], mask[:,i:i+1])
 
             loss += temp * loss_weights[n]
         return loss
@@ -96,10 +90,10 @@ class LitGoAT(L.LightningModule):
         output, pred_classification, latent = self.model(x_in, self.alpha) # equivalent to self.model(x_in, self.alpha) and self.forward(x_in)
         output = output.float()
 
-
         print(f'Output shape: {output.shape}')
-        print(f'Segmentation shape: {seg.shape}')
+        print(f'Output device: {output.device}')
         print(f'Mask shape: {seg.shape}')
+        print(f'Mask device: {mask.device}')
 
 
         segmentation_loss = self.compute_loss(output, mask, self.loss_functions, self.weights)
