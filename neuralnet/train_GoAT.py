@@ -72,7 +72,7 @@ class LitGoAT(L.LightningModule):
         x4 = imgs[3]
         seg = imgs[4]
 
-        seg3 = split_seg_labels(seg)
+        seg3 = split_seg_labels(seg).to(self.device)
 
         # Set the target either as overlapping or disjoint regions
         if self.train_on_overlap:
