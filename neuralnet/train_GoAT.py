@@ -227,7 +227,7 @@ if __name__ == '__main__':
     # Instantiate Trainer
     seed_everything(42, workers = True) # sets seeds for numpy, torch and python.random.
     checkpoint_callback = ModelCheckpoint(every_n_epochs = 2, dirpath=new_ckpt_dir, filename="train-GoAT-{epoch:02d}-{seg_loss:.2f}")
-    trainer = Trainer(fast_dev_run=1, max_epochs=max_epochs, default_root_dir=out_dir, deterministic = True) # Will automatically train with system devices and the maximum number of GPUs available (see documentation here: https://lightning.ai/docs/pytorch/stable/common/trainer.html)
+    trainer = Trainer(fast_dev_run=1, max_epochs=max_epochs, default_root_dir=out_dir) # Will automatically train with system devices and the maximum number of GPUs available (see documentation here: https://lightning.ai/docs/pytorch/stable/common/trainer.html)
 
     model = LitGoAT(model_architecture, alpha, init_lr, train_on_overlap, eval_on_overlap, loss_functions, loss_weights, weights, power, max_epochs)
 
