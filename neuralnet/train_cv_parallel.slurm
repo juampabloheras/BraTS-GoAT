@@ -34,7 +34,7 @@ TRAIN_ON_OVERLAP='--no-train_overlap'
 EVAL_ON_OVERLAP='--no-eval_on_overlap'
 
 # Model and parameters
-MODEL='extended-latent-unet-DANN'
+MODEL='unet-DANN'
 ALPHA=1
 
 # Data Loader
