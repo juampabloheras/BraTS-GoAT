@@ -96,6 +96,10 @@ class LitGoAT(L.LightningModule):
         output, pred_classification, latent = self.model(x_in, self.alpha) # equivalent to self.model(x_in, self.alpha) and self.forward(x_in)
         output = output.float()
 
+
+        print(f'Output shape: {output.shape}')
+        print(f'Segmentation shape: {seg.shape}')
+
         segmentation_loss = self.compute_loss(output, seg, self.loss_functions, self.weights)
         classifier_loss = self.domain_criterion(pred_classification, true_classification)
 
