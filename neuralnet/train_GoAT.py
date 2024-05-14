@@ -92,8 +92,10 @@ class LitGoAT(L.LightningModule):
 
         print(f'Output shape: {output.shape}')
         print(f'Output device: {output.device}')
-        print(f'Mask shape: {seg.shape}')
+        print(f'Mask shape: {mask.shape}')
         print(f'Mask device: {mask.device}')
+        print(f'Seg shape: {seg.shape}')
+        print(f'Seg device: {seg.device}')
 
 
         segmentation_loss = self.compute_loss(output, mask, self.loss_functions, self.weights)
