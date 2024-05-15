@@ -155,18 +155,9 @@ class LoadDatasetswClusterID(Dataset):
         if self.gt_provided:
             y1 = torch.from_numpy(y1)
 
-        # Get case_id from filename - ADDED by Ethan 17 July 2023
+        # Get case_info from filename
         filename = path.split('/')[-1]
-
-        print(f"Path type: {type(path)}")
-        print(f"Path: {(path)}")
-
-
         case_info = str(filename.split('.')[0]) # e.g. from BraTS-GoAT-00000.pkl will produce 'BraTS-GoAT-00000'
-
-        print(f"Case info type: {type(case_info)}")
-        print(f"Case info: {case_info}")
-        # case_info = tuple(filename.split('.')[0].split('-')[2:4]) #(case_id, timepoint)
 
         if self.gt_provided:
             data = x1, x2, x3, x4, y1
