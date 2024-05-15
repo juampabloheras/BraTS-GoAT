@@ -12,7 +12,11 @@ from torchvision import transforms
 # Function to make 2D pngs of selected slice of all 3D MRI scans in a directory in pkl format, and save them in an out directory.
 def make2dMRI(in_dir, out_dir, gt_provided = True, slice_no = 64, contrast_no = 0):
     files_list = os.listdir(in_dir)
+
+    print(files_list)
     files_list = [os.path.join(in_dir, filename) for filename in files_list]
+
+    print(files_list)
 
     data_transforms = transforms.Compose([trans.CenterCropBySize([128,192,128]), 
                                               trans.NumpyType((np.float32, np.float32,np.float32, np.float32,np.float32)),
