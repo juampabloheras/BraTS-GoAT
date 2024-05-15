@@ -17,7 +17,7 @@ def make2dMRI(in_dir, out_dir, gt_provided=True, slice_no=64, contrast_no=0):
         trans.NumpyType((np.float32, np.float32, np.float32, np.float32, np.float32)),
     ])
 
-    # Load dataset and make dataloader
+    # Load dataset and make DataLoader
     dataset = LoadDatasetswClusterID(in_dir, data_transforms, {}, gt_provided=gt_provided, partial_file_names=False)
     dl = DataLoader(dataset, batch_size=2, num_workers=3)
 
@@ -26,7 +26,6 @@ def make2dMRI(in_dir, out_dir, gt_provided=True, slice_no=64, contrast_no=0):
 
     # Iterate over DataLoader
     for batch_idx, (filename_ids, imgs, _) in enumerate(dl):
-        print(f'filename_ids: {filename_ids}')
         # Iterate over each image in the batch
         for i in range(len(filename_ids)):
             filename_id = filename_ids[i]
@@ -37,10 +36,6 @@ def make2dMRI(in_dir, out_dir, gt_provided=True, slice_no=64, contrast_no=0):
             plt.imshow(image.numpy()[0, :, :, slice_no], cmap='gray')
             plt.savefig(os.path.join(out_dir, f'{filename_id}.png'))
             plt.close()
-
-            print(f"Filename ID: {filename_id}")
-            print(f"Filename ID type: {type(filename_id)}")
-            print(f"Plotted figure {filename_id}, saved in {os.path.join(out_dir, f'{filename_id}.png')}!")
 
 
 if __name__ == '__main__':

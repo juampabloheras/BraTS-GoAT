@@ -56,7 +56,7 @@ class LoadDatasetswClusterID(Dataset):
         - This feature makes the code flexible such that if a sample is not clustered (as is the case during testing), the Dataset class will still work.
     '''
 
-    def __init__(self, data_path, transforms, cluster_mapping,  normalized=True, gt_provided=True, partial_file_names = True):
+    def __init__(self, data_path, transforms, cluster_mapping = {},  normalized=True, gt_provided=True, partial_file_names = True):
         self.transforms = transforms
         self.normalized = normalized
         self.gt_provided = gt_provided
