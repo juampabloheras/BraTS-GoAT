@@ -61,7 +61,7 @@ class LoadDatasetswClusterID(Dataset):
         self.normalized = normalized
         self.gt_provided = gt_provided
         if partial_file_names == False:
-            self.paths = os.listdir(data_path)
+            self.paths =  [os.path.join(data_path, filename) for filename in os.listdir(data_path)]
         else:
             self.paths = self._get_matching_files(data_path, partial_file_names)
 
