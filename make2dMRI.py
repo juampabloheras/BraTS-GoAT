@@ -19,7 +19,7 @@ def make2dMRI(in_dir, out_dir, gt_provided = True, slice_no = 64, contrast_no = 
                                               ])
     
     dataset = LoadDatasetswClusterID(in_dir, data_transforms, {} , gt_provided=gt_provided, partial_file_names= False) # Loads as (case_info, data, clusterID), where data contains (x1, x2, x3, x4, segmentation)
-    dl = DataLoader(dataset, batch_size=1, num_workers=3)
+    dl = DataLoader(dataset, batch_size=2, num_workers=3)
 
     for filename_id, imgs, _ in dl:
         image = imgs[contrast_no]
