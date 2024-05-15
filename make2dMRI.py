@@ -30,6 +30,9 @@ def make2dMRI(in_dir, out_dir, gt_provided = True, slice_no = 64, contrast_no = 
         plt.savefig(os.path.join(out_dir, f'{filename_id}.png'))
         plt.close()
 
+        print(f"Filename ID: {filename_id}")
+        print(f"Filename ID type: {type(filename_id)}")
+
         print(f"Plotted figure {filename_id}, saved in {os.path.join(out_dir, f'{filename_id}.png')}!")
 
 
