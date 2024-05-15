@@ -18,6 +18,8 @@ def make2dMRI(in_dir, out_dir, gt_provided = True, slice_no = 64, contrast_no = 
         plt.savefig(os.path.join(out_dir, f'{filename_id}.png'))
         plt.close()
 
+        print(f'Plotted figure {filename_id}, saved in {os.path.join(out_dir, f'{filename_id}.png')}!')
+
 
 if __name__ == '__main__':
     in_dir = '/gscratch/scrubbed/juampablo/BraTS-GoAT/DATA/training'
