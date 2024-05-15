@@ -76,6 +76,8 @@ class LoadDatasetswClusterID(Dataset):
         file_path = data_path
 
 
+        print(data_path, type(data_path))
+
         if isinstance(data_path,str):
             data_path = os.listdir(data_path)
 
