@@ -7,7 +7,10 @@ import sys
 # To import from sibling directory
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(parent_dir)
+
+print(f'Parent dir: {parent_dir}')
 from neuralnet.data.datasets import LoadDatasetswClusterID
+
 
 
 # Function to make 2D pngs of selected slice of all 3D MRI scans in a directory in pkl format, and save them in an out directory.
