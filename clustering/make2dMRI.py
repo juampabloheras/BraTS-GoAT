@@ -9,7 +9,7 @@ def make2dMRI(in_dir, out_dir, gt_provided = True, slice_no = 64, contrast_no = 
     dataset = LoadDatasetswClusterID(in_dir, gt_provided=gt_provided, partial_file_names= files_list) # Loads as (case_info, data, clusterID), where data contains (x1, x2, x3, x4, segmentation)
     dl = DataLoader(dataset, batch_size=1, num_workers=3)
 
-    for filename_id, imgs, true_classification in dl:
+    for filename_id, imgs, _ in dl:
         image = imgs[contrast_no]
 
         # Plotting
@@ -18,3 +18,8 @@ def make2dMRI(in_dir, out_dir, gt_provided = True, slice_no = 64, contrast_no = 
         plt.savefig(os.path.join(out_dir, f'{filename_id}.png'))
         plt.close()
 
+
+if __name__ == '__main__':
+    in_dir = '/gscratch/scrubbed/juampablo/BraTS-GoAT/DATA/training'
+    out_dir = '/gscratch/scrubbed/juampablo/BraTS-GoAT/2DImages'
+    make2dMRI(in_dir, out_dir)
