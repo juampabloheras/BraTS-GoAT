@@ -78,8 +78,6 @@ class LoadDatasetswClusterID(Dataset):
 
         print('heeeeeeeeeeeereereerreerre',data_path, type(data_path))
 
-        if isinstance(data_path,str):
-            data_path = os.listdir(data_path)
 
 
         ### code uses this case
@@ -90,9 +88,11 @@ class LoadDatasetswClusterID(Dataset):
                 temp += os.listdir(path)
             data_path = temp
 
+        if isinstance(data_path,str): # FOR make2dMRI.py
+            data_path = os.listdir(data_path)
+
         if not isinstance(data_path, (list, tuple)):
             data_path = [data_path]
-
 
         
         # print('data_path', data_path)
