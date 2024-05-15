@@ -60,10 +60,10 @@ class LoadDatasetswClusterID(Dataset):
         self.transforms = transforms
         self.normalized = normalized
         self.gt_provided = gt_provided
-        if partial_file_names != True:
-            self.paths = self._get_matching_files(data_path, partial_file_names)
-        else:
+        if partial_file_names == False:
             self.paths = data_path
+        else:
+            self.paths = self._get_matching_files(data_path, partial_file_names)
 
         self.cluster_mapping = cluster_mapping # mapping of cluster ID to a list of samples assigned to the ID, i.e., {clusterID: [sampleIDs]} for all clusters
         self.reverse_mapping = {sample: key for key, samples in self.cluster_mapping.items() for sample in samples} # reverse mapping of cluster mapping, i.e., {sampleID: clusterID} for all samples
@@ -74,10 +74,6 @@ class LoadDatasetswClusterID(Dataset):
         self.count = 0
 
         file_path = data_path
-
-
-        print('heeeeeeeeeeeereereerreerre',data_path, type(data_path))
-
 
 
         ### code uses this case
