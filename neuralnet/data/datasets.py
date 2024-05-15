@@ -75,11 +75,11 @@ class LoadDatasetswClusterID(Dataset):
 
         file_path = data_path
 
-
+        ############ THIS NEEDS TO BE IMPROVED ##############
         ### code uses this case
         temp = []
         if isinstance(data_path,list):
-            file_path = data_path[0]
+            file_path = data_path[0] ##### 
             for path in data_path:
                 temp += os.listdir(path)
             data_path = temp
@@ -90,6 +90,7 @@ class LoadDatasetswClusterID(Dataset):
         if not isinstance(data_path, (list, tuple)):
             data_path = [data_path]
 
+        ########################################################
         
         # print('data_path', data_path)
         for filename in data_path:
@@ -156,7 +157,7 @@ class LoadDatasetswClusterID(Dataset):
 
         # Get case_id from filename - ADDED by Ethan 17 July 2023
         filename = path.split('/')[-1]
-        case_info = filename.split('.')[0] # e.g. from BraTS-GoAT-00000.pkl will produce BraTS-GoAT-00000
+        case_info = filename.split('.')[0][0] # e.g. from BraTS-GoAT-00000.pkl will produce BraTS-GoAT-00000
         # case_info = tuple(filename.split('.')[0].split('-')[2:4]) #(case_id, timepoint)
 
         if self.gt_provided:
