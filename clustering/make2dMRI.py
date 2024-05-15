@@ -1,5 +1,4 @@
 import os
-from neuralnet.data.datasets import LoadDatasetswClusterID
 from torch.utils.data import DataLoader
 import matplotlib.pyplot as plt
 import sys
@@ -8,7 +7,6 @@ import sys
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(parent_dir)
 
-print(f'Parent dir: {parent_dir}')
 from neuralnet.data.datasets import LoadDatasetswClusterID
 
 
