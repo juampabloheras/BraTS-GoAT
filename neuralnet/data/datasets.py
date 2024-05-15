@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import cv2 as cv
 
-from data import trans
+import trans
 from torchvision import transforms
 
 
