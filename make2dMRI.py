@@ -27,10 +27,6 @@ def make2dMRI(in_dir, out_dir, gt_provided=True, slice_no=64, contrast_no=0):
     # Iterate over DataLoader
     for batch_idx, (filename_ids, imgs, _) in enumerate(dl):
 
-        # Define image save path, check if image has already been made
-        save_path = os.path.join(out_dir, f'{filename_id}.png')
-        if os.path.exists(save_path):
-            continue
 
 
         # Iterate over each image in the batch
@@ -49,7 +45,10 @@ def make2dMRI(in_dir, out_dir, gt_provided=True, slice_no=64, contrast_no=0):
             np.savez(save_path_npz, slice=slice)
             print(f'Saved {filename_id} in {save_path_npz}!')
 
-
+            # Define image save path, check if image has already been made
+            save_path = os.path.join(out_dir, f'{filename_id}.png')
+            if os.path.exists(save_path):
+                continue
             # Plotting
             plt.figure(figsize=(10, 10), dpi=300)
             slice = image.numpy()[contrast_no, :, :, slice_no]
