@@ -26,16 +26,32 @@ def make2dMRI(in_dir, out_dir, gt_provided=True, slice_no=64, contrast_no=0):
 
     # Iterate over DataLoader
     for batch_idx, (filename_ids, imgs, _) in enumerate(dl):
+
+        # # Define image save path, check if image has already been made
+        # save_path = os.path.join(out_dir, f'{filename_id}.png')
+        # if os.path.exists(save_path):
+        #     continue
+
+        # Define image save path, check if image has already been made
+        save_path_npz = os.path.join(out_dir, f'{filename_id}.npz')
+        if os.path.exists(save_path_npz):
+            continue
+
         # Iterate over each image in the batch
         for i in range(len(filename_ids)):
             filename_id = filename_ids[i]
             image = imgs[i][contrast_no]
 
-            # Plotting
-            plt.figure(figsize=(10, 10), dpi=300)
-            plt.imshow(image.numpy()[0, :, :, slice_no], cmap='gray')
-            plt.savefig(os.path.join(out_dir, f'{filename_id}.png'))
-            plt.close()
+            slice = image.numpy()[0, :, :, slice_no]
+
+            # Save the slice to an npz file
+            np.savez(save_path_npz, slice=slice)
+
+            # # Plotting
+            # plt.figure(figsize=(10, 10), dpi=300)
+            # plt.imshow(image.numpy()[0, :, :, slice_no], cmap='gray')
+            # plt.savefig(save_path)
+            # plt.close()
 
 
 if __name__ == '__main__':

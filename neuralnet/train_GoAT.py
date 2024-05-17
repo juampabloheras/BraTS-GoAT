@@ -194,7 +194,7 @@ class BraTSDataModule(L.LightningDataModule):
             self.brats_val = LoadDatasetswClusterID(self.data_dir, self.transforms, self.cluster_mapping,  normalized=True, gt_provided=True, partial_file_names = val_file_names)
 
         if stage == 'test':
-            self.brats_test = LoadDatasetswClusterID(self.data_dir, self.transforms, self.cluster_mapping,  normalized=True, gt_provided= True, partial_file_names = os.listdir(self.test_data_dir))
+            self.brats_test = LoadDatasetswClusterID(self.test_data_dir, self.transforms, self.cluster_mapping,  normalized=True, gt_provided= True, partial_file_names = False)
 
     def train_dataloader(self):
         return DataLoader(self.brats_train, batch_size=self.batch_size, num_workers=3)
