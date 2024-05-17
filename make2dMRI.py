@@ -11,7 +11,7 @@ from torchvision import transforms
 
 
 # Function to make 2D pngs of selected slice of all 3D MRI scans in a directory in pkl format, and save them in an out directory.
-def make2dMRI(in_dir, out_dir, gt_provided=True, slice_no=64, contrast_no=0):
+def make2dMRI(in_dir, out_dir, contrast_no=2, slice_no=64, gt_provided=True):
     # Data transforms
     data_transforms = trans.Compose([
         trans.CenterCropBySize([128, 192, 128]),
@@ -38,7 +38,7 @@ def make2dMRI(in_dir, out_dir, gt_provided=True, slice_no=64, contrast_no=0):
             print(f'Shape Imgs: {np.shape(np.array(imgs))}')
 
 
-            slice = np.array(imgs)[contrast_no,i,0, :, :, slice_no]
+            slice = np.array(imgs)[contrast_no,i,0, slice_no, :, :]
             # slice imagege.numpy()[contrast_no,0, :, :, slice_no]
 
 
