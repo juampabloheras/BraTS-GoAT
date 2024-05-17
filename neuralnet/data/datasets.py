@@ -61,7 +61,7 @@ class LoadDatasetswClusterID(Dataset):
         self.normalized = normalized
         self.gt_provided = gt_provided
         if partial_file_names == False:
-            self.paths =  [os.path.join(data_path, filename) for filename in os.listdir(data_path)]
+            self.paths =  [os.path.join(data_path, filename) for filename in os.listdir(data_path) if filename.endswith('.pkl')]
         else:
             self.paths = self._get_matching_files(data_path, partial_file_names)
 
@@ -257,11 +257,11 @@ class LoadDatasets(Dataset):
 
 
 class LoadDatasetswDomain(Dataset):
-    def __init__(self, data_path, transforms, normalized=True, gt_provided=True, partial_file_names = True):
+    def __init__(self, data_path, transforms, normalized=True, gt_provided=True, partial_file_names = False):
         self.transforms = transforms
         self.normalized = normalized
         self.gt_provided = gt_provided
-        if partial_file_names != True:
+        if partial_file_names != False:
             self.paths = self._get_matching_files(data_path, partial_file_names)
         else:
             self.paths = data_path
