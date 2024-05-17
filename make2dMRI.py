@@ -38,7 +38,7 @@ def make2dMRI(in_dir, out_dir, gt_provided=True, slice_no=64, contrast_no=0):
             print(f'Shape Imgs: {np.shape(np.array(imgs))}')
 
 
-            slice = imgs.numpy()[contrast_no,i,0, :, :, slice_no]
+            slice = np.array(imgs)[contrast_no,i,0, :, :, slice_no]
             # slice imagege.numpy()[contrast_no,0, :, :, slice_no]
 
 
