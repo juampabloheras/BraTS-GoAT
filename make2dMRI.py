@@ -32,17 +32,18 @@ def make2dMRI(in_dir, out_dir, gt_provided=True, slice_no=64, contrast_no=0):
         # if os.path.exists(save_path):
         #     continue
 
-        # Define image save path, check if image has already been made
-        save_path_npz = os.path.join(out_dir, f'{filename_id}.npz')
-        if os.path.exists(save_path_npz):
-            continue
 
         # Iterate over each image in the batch
         for i in range(len(filename_ids)):
             filename_id = filename_ids[i]
             image = imgs[i][contrast_no]
-
             slice = image.numpy()[0, :, :, slice_no]
+
+
+            # Define image save path, check if image has already been made
+            save_path_npz = os.path.join(out_dir, f'{filename_id}.npz')
+            if os.path.exists(save_path_npz):
+                continue
 
             # Save the slice to an npz file
             np.savez(save_path_npz, slice=slice)
