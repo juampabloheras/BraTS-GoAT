@@ -62,7 +62,7 @@ def make2dMRI(in_dir, out_dir, contrast_no=2, slice_no=64, gt_provided=True):
 
 
             # slice = image.numpy()[contrast_no,0, :, :, slice_no]
-            plt.imshow(slice, cmap='gray')
+            plt.imshow(slice.T, cmap='gray')
             plt.savefig(save_path)
             plt.close()
             print(f'Saved {filename_id} in {save_path}!')
