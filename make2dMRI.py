@@ -53,6 +53,8 @@ def make2dMRI(in_dir, out_dir, gt_provided=True, slice_no=64, contrast_no=0):
             # plt.savefig(save_path)
             # plt.close()
 
+            print(f'Saved {filename_id} in {save_path_npz}!')
+
 
 if __name__ == '__main__':
     in_dir = '/gscratch/scrubbed/juampablo/BraTS-GoAT/DATA/training'
