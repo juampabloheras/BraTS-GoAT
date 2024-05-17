@@ -47,14 +47,16 @@ def make2dMRI(in_dir, out_dir, gt_provided=True, slice_no=64, contrast_no=0):
 
             # Save the slice to an npz file
             np.savez(save_path_npz, slice=slice)
+            print(f'Saved {filename_id} in {save_path_npz}!')
+
 
             # Plotting
             plt.figure(figsize=(10, 10), dpi=300)
-            plt.imshow(image.numpy()[0, :, :, slice_no], cmap='gray')
+            slice = image.numpy()[contrast_no, :, :, slice_no]
+            plt.imshow(slice, cmap='gray')
             plt.savefig(save_path)
             plt.close()
-
-            print(f'Saved {filename_id} in {save_path_npz}!')
+            print(f'Saved {filename_id} in {save_path}!')
 
 
 if __name__ == '__main__':
