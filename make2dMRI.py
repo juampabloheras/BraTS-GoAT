@@ -51,8 +51,10 @@ def make2dMRI(in_dir, out_dir, gt_provided=True, slice_no=64, contrast_no=0):
                 continue
             # Plotting
             plt.figure(figsize=(10, 10), dpi=300)
-            print(f'Type Image: {type(image)}')
-            print(f'Shape Image: {np.shape(image)}')
+            print(f'Type Image: {type(image.numpy())}')
+            print(f'Shape Image: {np.shape(image.numpy())}')
+            print(f'Slice shape: {np.shape(image.numpy()[contrast_no, :, :, slice_no])}')
+
 
             slice = image.numpy()[contrast_no, :, :, slice_no]
             plt.imshow(slice, cmap='gray')
