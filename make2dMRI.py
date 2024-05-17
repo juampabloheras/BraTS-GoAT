@@ -19,7 +19,7 @@ def make2dMRI(in_dir, out_dir, gt_provided=True, slice_no=64, contrast_no=0):
 
     # Load dataset and make DataLoader
     dataset = LoadDatasetswClusterID(in_dir, data_transforms, {}, gt_provided=gt_provided, partial_file_names=False)
-    dl = DataLoader(dataset, batch_size=1, num_workers=3)
+    dl = DataLoader(dataset, batch_size=4, num_workers=3)
 
     # Make sure output directory exists
     os.makedirs(out_dir, exist_ok=True)
