@@ -32,6 +32,10 @@ def make2dMRI(in_dir, out_dir, gt_provided=True, slice_no=64, contrast_no=0):
         # Iterate over each image in the batch
         for i in range(len(filename_ids)):
             filename_id = filename_ids[i]
+
+            print(f'Type Image: {type(imgs.numpy())}')
+            print(f'Shape Image: {np.shape(imgs.numpy())}')
+
             image = imgs[i]
             slice = image.numpy()[contrast_no, :, :, slice_no]
 
