@@ -1,3 +1,4 @@
+from email.mime import image
 import os
 from torch.utils.data import DataLoader
 import matplotlib.pyplot as plt
@@ -36,8 +37,8 @@ def make2dMRI(in_dir, out_dir, gt_provided=True, slice_no=64, contrast_no=0):
             print(f'Type Imags: {type(imgs)}')
             print(f'Shape Imgs: {np.shape(np.array(imgs))}')
 
-            image = imgs[i]
-            slice = image.numpy()[contrast_no,0, :, :, slice_no]
+            slice = imgs[i,contrast_no,0, :, :, slice_no].numpy()
+            # slice imagege.numpy()[contrast_no,0, :, :, slice_no]
 
 
             # Define image save path, check if image has already been made
@@ -60,7 +61,7 @@ def make2dMRI(in_dir, out_dir, gt_provided=True, slice_no=64, contrast_no=0):
             print(f'Slice shape: {np.shape(image.numpy()[contrast_no, :, :, slice_no])}')
 
 
-            slice = image.numpy()[contrast_no,0, :, :, slice_no]
+            # slice = image.numpy()[contrast_no,0, :, :, slice_no]
             plt.imshow(slice, cmap='gray')
             plt.savefig(save_path)
             plt.close()
