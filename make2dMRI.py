@@ -44,15 +44,22 @@ def make2dMRI(in_dir, out_dir, contrasts_list=[0,1, 2], slice_no=63, gt_provided
             X = np.array(slice_list)
             Y = np.array(imgs)[4,i,0, slice_no, :, :]
 
+            print(f'Shape X: {np.shape(X)}')
+            print(f'Shape Y: {np.shape(Y)}')
+
             compiled_X_list.append(X)
             compiled_Y_list.append(Y)
     
     compiled_X_array = np.array(compiled_X_list)
     compiled_Y_array = np.array(compiled_Y_list)
 
+    print(f'Shape compiled X: {np.shape(X)}')
+    print(f'Shape compiled Y: {np.shape(Y)}')
+
+
 
     # Define image save path, check if image has already been made
-    save_path_npz = os.path.join(out_dir, f'{filename_id}.npz')            
+    save_path_npz = os.path.join(out_dir, 'brain_data.npz')            
 
     np.savez(save_path_npz, x_train=compiled_X_array, y_train=compiled_Y_array)
     print(f'Saved {filename_id} in {save_path_npz}!')
@@ -60,5 +67,5 @@ def make2dMRI(in_dir, out_dir, contrasts_list=[0,1, 2], slice_no=63, gt_provided
 
 if __name__ == '__main__':
     in_dir = '/gscratch/scrubbed/juampablo/BraTS-GoAT/DATA/training'
-    out_dir = '/gscratch/scrubbed/juampablo/BraTS-GoAT/2DImagesNPZ2'
+    out_dir = '/gscratch/scrubbed/juampablo/BraTS-GoAT/2DImagesNPZ3'
     make2dMRI(in_dir, out_dir)
