@@ -11,7 +11,7 @@ from torchvision import transforms
 
 
 # Function to make 2D pngs of selected slice of all 3D MRI scans in a directory in pkl format, and save them in an out directory.
-def make2dMRI(in_dir, out_dir, contrast_no=2, slice_no=63, gt_provided=True):
+def make2dMRI(in_dir, out_dir, contrasts_list=[0,1, 2], slice_no=63, gt_provided=True):
     # Data transforms
     data_transforms = trans.Compose([
         trans.CenterCropBySize([128, 192, 128]),
@@ -25,47 +25,37 @@ def make2dMRI(in_dir, out_dir, contrast_no=2, slice_no=63, gt_provided=True):
     # Make sure output directory exists
     os.makedirs(out_dir, exist_ok=True)
 
+    compiled_X_list = []
+    compiled_Y_list = []
     # Iterate over DataLoader
     for batch_idx, (filename_ids, imgs, _) in enumerate(dl):
-
-
-
         # Iterate over each image in the batch
         for i in range(len(filename_ids)):
             filename_id = filename_ids[i]
 
-            print(f'Type Imags: {type(imgs)}')
-            print(f'Shape Imgs: {np.shape(np.array(imgs))}')
+            # print(f'Type Imags: {type(imgs)}')
+            # print(f'Shape Imgs: {np.shape(np.array(imgs))}')
+
+            slice_list = []
+            for contrast_no in contrasts_list: 
+                slice = np.array(imgs)[contrast_no,i,0, slice_no, :, :]
+                slice_list.append(slice)
+
+            X = np.array(slice_list)
+            Y = np.array(imgs)[4,i,0, slice_no, :, :]
+
+            compiled_X_list.append(X)
+            compiled_Y_list.append(Y)
+    
+    compiled_X_array = np.array(compiled_X_list)
+    compiled_Y_array = np.array(compiled_Y_list)
 
 
-            slice = np.array(imgs)[contrast_no,i,0, slice_no, :, :]
-            # slice imagege.numpy()[contrast_no,0, :, :, slice_no]
+    # Define image save path, check if image has already been made
+    save_path_npz = os.path.join(out_dir, f'{filename_id}.npz')            
 
-
-            # Define image save path, check if image has already been made
-            save_path_npz = os.path.join(out_dir, f'{filename_id}.npz')
-            if os.path.exists(save_path_npz):
-                continue
-
-            # Save the slice to an npz file
-            np.savez(save_path_npz, slice=slice)
-            print(f'Saved {filename_id} in {save_path_npz}!')
-
-            # Define image save path, check if image has already been made
-            save_path = os.path.join(out_dir, f'{filename_id}.png')
-            if os.path.exists(save_path):
-                continue
-            # Plotting
-            plt.figure(figsize=(10, 10), dpi=300)
-
-            print(f'Slice shape: {np.shape(slice)}')
-
-
-            # slice = image.numpy()[contrast_no,0, :, :, slice_no]
-            plt.imshow(np.flip(slice.T, axis = 0), cmap='gray')
-            plt.savefig(save_path)
-            plt.close()
-            print(f'Saved {filename_id} in {save_path}!')
+    np.savez(save_path_npz, x_train=compiled_X_array, y_train=compiled_Y_array)
+    print(f'Saved {filename_id} in {save_path_npz}!')
 
 
 if __name__ == '__main__':
