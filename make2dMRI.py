@@ -39,7 +39,7 @@ def make2dMRI(in_dir, out_dir, contrasts_list=[0,1, 2, 3], slice_no=63, gt_provi
 
             slice_list = []
             for contrast_no in contrasts_list: 
-                slice = np.array(imgs)[contrast_no,i,0, slice_no, :, :]
+                slice = np.array(imgs)[contrast_no,i,0, slice_no, :, :]   # last three coords: [saggital, _, _] not sure about order for last two
                 slice_list.append(slice)
 
             X = np.array(slice_list)
