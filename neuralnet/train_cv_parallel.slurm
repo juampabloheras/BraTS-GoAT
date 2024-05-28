@@ -22,7 +22,7 @@ TRAIN_DIR='/gscratch/scrubbed/juampablo/BraTS-GoAT/DATA/training'
 TEST_DIR='/gscratch/scrubbed/juampablo/BraTS-GoAT/DATA/validation'
 CKPT_DIR='None'
 BASE_OUT_DIR='/gscratch/kurtlab/juampablo/BraTS-GoAT/TESTS/test0513/out_dir'
-FOLDS_DIR='/gscratch/kurtlab/juampablo/BraTS-GoAT/neuralnet/CVFolds/cv-5-20240513-0'
+FOLDS_DIR='/gscratch/kurtlab/juampablo/BraTS-GoAT/neuralnet/CVFolds/cv-5-tianyi'
 
 CLUSTER_DICT='/gscratch/kurtlab/juampablo/BraTS-GoAT/neuralnet/cluster_dict.pkl'
 
@@ -113,3 +113,5 @@ python3 train_GoAT.py \
     $TRAIN_ON_OVERLAP $EVAL_ON_OVERLAP
 EOT
 done
+
+# python3 train_GoAT.py --train_dir ${TRAIN_DIR[@]} --test_dir ${TEST_DIR[@]}  --ckpt_dir $CKPT_DIR --out_dir $OUT_DIR --loss ${LOSS[@]} --loss_weights ${LOSS_WEIGHTS[@]} --weights ${WEIGHTS[@]} --model $MODEL --alpha $ALPHA --partial_file_names_dir ${PARTIAL_FILE_NAMES_DIR[@]} --folds_dir $FOLDS_DIR --fold_no $FOLD_NO --cluster_dict $CLUSTER_DICT  $TRAIN_ON_OVERLAP $EVAL_ON_OVERLAP > output_debug.log 2> error_debug.log

@@ -67,6 +67,6 @@ def make2dMRI(in_dir, out_dir, contrasts_list=[0,1, 2, 3], slice_no=63, gt_provi
 
 
 if __name__ == '__main__':
-    in_dir = '/gscratch/scrubbed/juampablo/BraTS-GoAT/DATA/training'
-    out_dir = '/gscratch/scrubbed/juampablo/BraTS-GoAT/2DImagesNPZ3'
+    in_dir = '/gscratch/kurtlab/juampablo/DATA/training'
+    out_dir = '/gscratch/kurtlab/juampablo/BraTS-GoAT/2DImages'
     make2dMRI(in_dir, out_dir)
