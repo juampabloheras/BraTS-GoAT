@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import cv2 as cv
 
-from data import trans
+from . import trans
 from torchvision import transforms
 
 
@@ -56,14 +56,14 @@ class LoadDatasetswClusterID(Dataset):
         - This feature makes the code flexible such that if a sample is not clustered (as is the case during testing), the Dataset class will still work.
     '''
 
-    def __init__(self, data_path, transforms, cluster_mapping,  normalized=True, gt_provided=True, partial_file_names = True):
+    def __init__(self, data_path, transforms, cluster_mapping = {},  normalized=True, gt_provided=True, partial_file_names = True):
         self.transforms = transforms
         self.normalized = normalized
         self.gt_provided = gt_provided
-        if partial_file_names != True:
-            self.paths = self._get_matching_files(data_path, partial_file_names)
+        if partial_file_names == False:
+            self.paths =  [os.path.join(data_path, filename) for filename in os.listdir(data_path) if filename.endswith('.pkl')]
         else:
-            self.paths = data_path
+            self.paths = self._get_matching_files(data_path, partial_file_names)
 
         self.cluster_mapping = cluster_mapping # mapping of cluster ID to a list of samples assigned to the ID, i.e., {clusterID: [sampleIDs]} for all clusters
         self.reverse_mapping = {sample: key for key, samples in self.cluster_mapping.items() for sample in samples} # reverse mapping of cluster mapping, i.e., {sampleID: clusterID} for all samples
@@ -75,23 +75,22 @@ class LoadDatasetswClusterID(Dataset):
 
         file_path = data_path
 
-
-        if isinstance(data_path,str):
-            data_path = os.listdir(data_path)
-
-
+        ############ THIS NEEDS TO BE IMPROVED ##############
         ### code uses this case
         temp = []
         if isinstance(data_path,list):
-            file_path = data_path[0]
+            file_path = data_path[0] ##### 
             for path in data_path:
                 temp += os.listdir(path)
             data_path = temp
 
+        if isinstance(data_path,str): # FOR make2dMRI.py
+            data_path = os.listdir(data_path)
+
         if not isinstance(data_path, (list, tuple)):
             data_path = [data_path]
 
-
+        ########################################################
         
         # print('data_path', data_path)
         for filename in data_path:
@@ -156,9 +155,9 @@ class LoadDatasetswClusterID(Dataset):
         if self.gt_provided:
             y1 = torch.from_numpy(y1)
 
-        # Get case_id from filename - ADDED by Ethan 17 July 2023
+        # Get case_info from filename
         filename = path.split('/')[-1]
-        case_info = tuple(filename.split('.')[0].split('-')[2:4]) #(case_id, timepoint)
+        case_info = str(filename.split('.')[0]) # e.g. from BraTS-GoAT-00000.pkl will produce 'BraTS-GoAT-00000'
 
         if self.gt_provided:
             data = x1, x2, x3, x4, y1
@@ -258,11 +257,11 @@ class LoadDatasets(Dataset):
 
 
 class LoadDatasetswDomain(Dataset):
-    def __init__(self, data_path, transforms, normalized=True, gt_provided=True, partial_file_names = True):
+    def __init__(self, data_path, transforms, normalized=True, gt_provided=True, partial_file_names = False):
         self.transforms = transforms
         self.normalized = normalized
         self.gt_provided = gt_provided
-        if partial_file_names != True:
+        if partial_file_names != False:
             self.paths = self._get_matching_files(data_path, partial_file_names)
         else:
             self.paths = data_path

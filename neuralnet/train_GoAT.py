@@ -87,7 +87,6 @@ class LitGoAT(L.LightningModule):
 
         x_in = torch.cat((x1, x2, x3, x4), dim=1)
 
-        print(f'Shape of x_in: {x_in.shape}')
 
         output, pred_classification, latent = self.model(x_in, self.alpha) # equivalent to self.model(x_in, self.alpha) and self.forward(x_in)
         output = output.float()
@@ -112,9 +111,50 @@ class LitGoAT(L.LightningModule):
         return loss
     
     def validation_step(self, batch, batch_idx):
-        # if self.calculate_eval_metrics == False:
-        print("In Validation.....")
-        pass
+
+        subject_id, imgs, true_classification = batch
+
+        # Unpack the data
+        x1 = imgs[0]
+        x2 = imgs[1]
+        x3 = imgs[2]
+        x4 = imgs[3]
+        seg = imgs[4]
+
+        seg3 = split_seg_labels(seg).to(self.device)
+
+        # Set the target either as overlapping or disjoint regions
+        if self.train_on_overlap:
+            # Combine the segmentation labels into partially overlapping regions
+            mask = torch.zeros_like(seg3)
+            mask[:,0] = seg3[:, 0] + seg3[:, 1] + seg3[:, 2] #WHOLE TUMOR
+            mask[:,1] = seg3[:, 0] + seg3[:, 2] #TUMOR CORE
+            mask[:,2] = seg3[:, 2] #ENHANCING TUMOR
+            mask = mask.float()
+        else:
+            mask = seg3.float()
+
+        x_in = torch.cat((x1, x2, x3, x4), dim=1)
+
+        output, pred_classification, latent = self.model(x_in, self.alpha) # equivalent to self.model(x_in, self.alpha) and self.forward(x_in)
+        output = output.float()
+
+        segmentation_loss = self.compute_loss(output, mask, self.loss_functions, self.weights)
+        classifier_loss = self.domain_criterion(pred_classification, true_classification)
+
+        loss = self.loss_weights[0]*segmentation_loss + self.loss_weights[1]*classifier_loss
+
+        # Log losses to TensorBoard (changing to WandB soon..)
+        self.log("seg_loss_val", segmentation_loss, on_step=False, on_epoch=True)
+        self.log("classif_loss_val", classifier_loss, on_step=False, on_epoch=True)
+        self.log("backprop_loss_val", loss, on_step=False, on_epoch=True)
+        self.log('epoch_loss_val', loss, on_step=False, on_epoch=True) # Logs mean loss per epoch
+
+        try:
+            self.log(f'cluster{true_classification}_seg_loss_val', segmentation_loss)
+            self.log(f'cluster{true_classification}_classif_loss_val', classifier_loss)
+        except:
+            print(f"Classification {true_classification} not understood.")
             
              
     
@@ -154,7 +194,7 @@ class BraTSDataModule(L.LightningDataModule):
             self.brats_val = LoadDatasetswClusterID(self.data_dir, self.transforms, self.cluster_mapping,  normalized=True, gt_provided=True, partial_file_names = val_file_names)
 
         if stage == 'test':
-            self.brats_test = LoadDatasetswClusterID(self.data_dir, self.transforms, self.cluster_mapping,  normalized=True, gt_provided= True, partial_file_names = os.listdir(self.test_data_dir))
+            self.brats_test = LoadDatasetswClusterID(self.test_data_dir, self.transforms, self.cluster_mapping,  normalized=True, gt_provided= True, partial_file_names = False)
 
     def train_dataloader(self):
         return DataLoader(self.brats_train, batch_size=self.batch_size, num_workers=3)
@@ -221,7 +261,7 @@ if __name__ == '__main__':
     # Instantiate Trainer
     seed_everything(42, workers = True) # sets seeds for numpy, torch and python.random.
     checkpoint_callback = ModelCheckpoint(every_n_epochs = 2, dirpath=new_ckpt_dir, filename="train-GoAT-{epoch:02d}-{seg_loss:.2f}")
-    trainer = Trainer(fast_dev_run=1, max_epochs=max_epochs, default_root_dir=out_dir) # Will automatically train with system devices and the maximum number of GPUs available (see documentation here: https://lightning.ai/docs/pytorch/stable/common/trainer.html)
+    trainer = Trainer(fast_dev_run=2, max_epochs=max_epochs, default_root_dir=out_dir) # Will automatically train with system devices and the maximum number of GPUs available (see documentation here: https://lightning.ai/docs/pytorch/stable/common/trainer.html)
 
     model = LitGoAT(model_architecture, alpha, init_lr, train_on_overlap, eval_on_overlap, loss_functions, loss_weights, weights, power, max_epochs)
 
