@@ -24,6 +24,10 @@ import warnings
 
 from train_utils import *
 
+# Weights and Biases logger
+from lightning.pytorch.loggers import WandbLogger
+
+wandb_logger = WandbLogger(project="CSE547 Final Project")
 
 
 # Lightning Module 
@@ -258,15 +262,25 @@ if __name__ == '__main__':
     # Instantiate DataModule
     dm = BraTSDataModule(data_dir = data_dir, batch_size = batch_size, test_data_dir = test_data_dir, folds_dir = folds_dir, fold_no = fold_no, cluster_mapping=cluster_mapping)
     
-    # Instantiate Trainer
+    # Set seeds
     seed_everything(42, workers = True) # sets seeds for numpy, torch and python.random.
-    checkpoint_callback = ModelCheckpoint(every_n_epochs = 2, dirpath=new_ckpt_dir, filename="train-GoAT-{epoch:02d}-{seg_loss:.2f}")
-    trainer = Trainer(max_epochs=max_epochs, default_root_dir=out_dir, callbacks=[checkpoint_callback], resume_from_checkpoint = True) # Will automatically train with system devices and the maximum number of GPUs available (see documentation here: https://lightning.ai/docs/pytorch/stable/common/trainer.html)
 
+    # Define callbacks
+    lr_monitor = LearningRateMonitor(logging_interval='step')
+    checkpoint_callback = ModelCheckpoint(every_n_epochs = 2, dirpath=new_ckpt_dir, filename=f"train-GoAT-{epoch:02d}-{seg_loss:.4f}-fold{fold_no}", save_last = True, monitor = seg_loss, save_top_k = 5)
+
+    # Instantiate Model
     model = LitGoAT(model_architecture, alpha, init_lr, train_on_overlap, eval_on_overlap, loss_functions, loss_weights, weights, power, max_epochs)
-    
-    trainer.fit(model, datamodule=dm)
-    print("Best model saved at:", checkpoint_callback.best_model_path)
+
+    if os.path.exists(os.path.join(new_ckpt_dir,'last.ckpt')):
+        trainer = Trainer(max_epochs=max_epochs, default_root_dir=out_dir, callbacks=[lr_monitor, checkpoint_callback], logger=wandb_logger) 
+        print(f'Loaded checkpoint from: {os.path.join(new_ckpt_dir,"last.ckpt")}. Training model from here.')
+        trainer.fit(model, datamodule=dm, ckpt_path= os.path.join(new_ckpt_dir,'last.ckpt') )
+
+    else:
+        trainer = Trainer(max_epochs=max_epochs, default_root_dir=out_dir, callbacks=[checkpoint_callback]) # Will automatically train with system devices and the maximum number of GPUs available (see documentation here: https://lightning.ai/docs/pytorch/stable/common/trainer.html)
+        print("Starting training from the beginning.")
+        trainer.fit(model, datamodule=dm)
 
     trainer.validate(datamodule=dm)
 
