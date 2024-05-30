@@ -4,6 +4,15 @@ import torch.nn.functional as F
 from torch.autograd import Function
 
 
+# Imports to test models
+from torch.utils.data import DataLoader
+from data.datasets import LoadDatasetswClusterID
+from utils import *
+import random
+from torchvision import transforms
+from data import trans
+
+
 # Component blocks
 class conv_block(nn.Module):
     def __init__(self,ch_in,ch_out1,ch_out2,k1,k2,s1,s2):
@@ -126,9 +135,8 @@ class EncoderDecoder3D(nn.Module):
         return f"EncoderDecoder3D (with {num_params:,} parameters)"
     
 class U_Net3D(nn.Module):
-    def __init__(self,nf, img_ch=4,output_ch=3):
+    def __init__(self,nf = 8, img_ch=4,output_ch=3):
         super(U_Net3D,self).__init__()
-        nf= 8
         self.Maxpool = nn.MaxPool3d(kernel_size=2,stride=2) # .to(device='cuda:1')
         self.Conv1 = conv_block(ch_in=img_ch,ch_out1=nf*2,ch_out2=nf*2,k1=3,k2=3,s1=1,s2=1) # .to(device='cuda:1')
         self.Conv2 = conv_block(ch_in=nf*2,ch_out1=nf*3,ch_out2=nf*3,k1=3,k2=3,s1=2,s2=1) # .to(device='cuda:1')
@@ -250,7 +258,7 @@ class DANNUNet3DExtendedLatent(nn.Module):
         super().__init__()
         nf = 8
 
-        self.UNet3D = U_Net3D(nf, img_ch=img_ch, output_ch= output_ch)
+        self.UNet3D = U_Net3D(nf=nf, img_ch=img_ch, output_ch= output_ch)
         self.classifier = domain_classifier(CH_IN=nf*47, num_domains = num_domains) # nf*47 is sum of channels in extended latent
 
     def forward(self, input, alpha = 1):
@@ -271,8 +279,8 @@ class DANNUNet3DExtendedLatent(nn.Module):
 
         if alpha is not None:
             reversed_latent = GradReverse.apply(extended_latent, alpha) # reverse gradient at the bottleneck
-            classification = self.classifier(reversed_latent) # classify using the latent + x1, x2, ... , x6
-
+            classification = self.classifier(reversed_latent) # classify using the latent + x1, x2, ... , x6  
+            # CLASSIFIER dimensions don't match
         else:
             # If alpha is not provided, perform regular classification
             classification = self.classifier(extended_latent)
@@ -286,7 +294,7 @@ class DANNUNet3D(nn.Module):
         super().__init__()
         nf = 8
 
-        self.UNet3D = U_Net3D(nf, img_ch=img_ch, output_ch= output_ch)
+        self.UNet3D = U_Net3D(nf = nf, img_ch=img_ch, output_ch= output_ch)
         self.classifier = domain_classifier(CH_IN=nf*12, num_domains = num_domains)
 
     def forward(self, input, alpha = 1):
@@ -301,3 +309,78 @@ class DANNUNet3D(nn.Module):
             classification = self.classifier(latent)
             
         return [segmentation, classification, latent]
+
+
+
+def testModel(model, data_dir, num_samples, with_latent = False, cluster_mapping = {}, train_on_overlap = True, num_workers = 3):
+    
+    '''
+    Code to debug models.
+    '''
+    
+    # Configuration settings
+    data_dir = data_dir
+    batch_size = 3
+
+    num_workers = num_workers
+    cluster_mapping = cluster_mapping  
+    data_transforms = transforms.Compose([trans.CenterCropBySize([128,192,128]), 
+                                              trans.NumpyType((np.float32, np.float32,np.float32, np.float32,np.float32)),
+                                              ])
+    train_file_names = random.sample(os.listdir(data_dir), num_samples)
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    alpha = 0.5  
+    train_on_overlap = train_on_overlap  
+
+    # Load dataset
+    dataset = LoadDatasetswClusterID(data_dir, data_transforms, cluster_mapping,
+                                         normalized=True, gt_provided=True, 
+                                         partial_file_names=train_file_names)
+
+    # Create DataLoader
+    dataloader = DataLoader(dataset, batch_size=batch_size, num_workers=num_workers)
+
+    for batch in dataloader:
+        subject_id, imgs, true_classification = batch
+
+        seg = imgs[4]
+        seg3 = split_seg_labels(seg).to(device)
+        mask = torch.zeros_like(seg3) if train_on_overlap else seg3.float()
+        if train_on_overlap:
+            mask[:, 0] = seg3[:, 0] + seg3[:, 1] + seg3[:, 2]
+            mask[:, 1] = seg3[:, 0] + seg3[:, 2]
+            mask[:, 2] = seg3[:, 2]
+            mask = mask.float()
+
+        x_in = torch.cat(imgs[:4], dim=1).to(device)
+        
+        # Run model
+        model = model.to(device)  # Ensure the model is on the correct device
+
+        if with_latent == True:
+            output, pred_classification, latent = model(x_in, alpha)
+        else:
+            output = model(x_in)
+
+        # Print outputs for verification
+        print('Subject ID: ', subject_id)
+        print("Input Shape: ", np.shape(x_in))
+        print("Output shape: ", np.shape(output[0] if isinstance(output, list) and output else output))
+
+
+        if with_latent == True:
+            print("Predicted Classification: ", pred_classification)
+            print("True Classification: ", true_classification)
+            print("Shape of Latent Representation:", np.shape(latent))
+
+    return
+
+
+
+
+if __name__ == '__main__':
+    model = DANNUNet3D()
+    data_dir = '/gscratch/scrubbed/juampablo/BraTS-GoAT/DATA/training'
+    num_samples = 4
+    with_latent = True # bool if latent is returned
+    testModel(model, data_dir, num_samples, with_latent)

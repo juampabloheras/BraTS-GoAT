@@ -17,8 +17,10 @@ from torchvision.transforms import ToTensor
 import lightning as L
 from lightning.pytorch.cli import LightningCLI
 
+# Trainer Imports
 from lightning.pytorch import Trainer, seed_everything
 from lightning.pytorch.callbacks import ModelCheckpoint
+from lightning.pytorch.callbacks import LearningRateMonitor
 
 import warnings
 
@@ -46,6 +48,7 @@ class LitGoAT(L.LightningModule):
         self.power = power
         self.max_epochs = max_epochs
         self.save_hyperparameters()
+        self.automatic_optimization = False
 
 
 
@@ -66,6 +69,10 @@ class LitGoAT(L.LightningModule):
         return x
 
     def training_step(self, batch, batch_idx): 
+        
+        # Set capturable = True to circumvent error
+        optimizer = self.optimizers()
+        optimizer.param_groups[0]['capturable'] = True
 
         subject_id, imgs, true_classification = batch
 
@@ -169,6 +176,8 @@ class LitGoAT(L.LightningModule):
             'interval': 'epoch',  
             'frequency': 1
         }
+
+
         return [optimizer], [lr_scheduler]
 
     def lr_lambda(self, current_epoch):
@@ -244,7 +253,7 @@ if __name__ == '__main__':
     cluster_dict_path = cluster_dict
 
     data_dir = train_dir
-    batch_size = 1
+    batch_size = 2  ######
     test_data_dir = test_dir
     folds_dir = folds_dir
     fold_no = fold_no
@@ -267,7 +276,7 @@ if __name__ == '__main__':
 
     # Define callbacks
     lr_monitor = LearningRateMonitor(logging_interval='step')
-    checkpoint_callback = ModelCheckpoint(every_n_epochs = 2, dirpath=new_ckpt_dir, filename=f"train-GoAT-{epoch:02d}-{seg_loss:.4f}-fold{fold_no}", save_last = True, monitor = seg_loss, save_top_k = 5)
+    checkpoint_callback = ModelCheckpoint(every_n_epochs = 2, dirpath=new_ckpt_dir, filename='train-GoAT-{epoch:02d}-{seg_loss:.4f}-fold{fold_no:02d}', save_last = True, monitor = 'seg_loss', mode = 'min', save_top_k = 5)  # Note filename is NOT an fstring
 
     # Instantiate Model
     model = LitGoAT(model_architecture, alpha, init_lr, train_on_overlap, eval_on_overlap, loss_functions, loss_weights, weights, power, max_epochs)

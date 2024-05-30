@@ -37,17 +37,27 @@ MODEL_STR_TO_FUNC = {
         'unet-DANN': model.DANNUNet3D(),
         'extended-latent-unet-DANN': model.DANNUNet3DExtendedLatent()
 
-} # All models here have output: [segmentation, classification, latent]
+} # ***  All models here have output: [segmentation, classification, latent]  ***
+
+# def split_seg_labels(seg):
+#     # Split the segmentation labels into 3 channels
+#     seg3 = torch.from_numpy(np.zeros(seg.shape))
+#     seg3 = torch.cat((seg3,seg3,seg3), dim=1)
+#     seg3[:,0,:,:,:] = torch.where(seg == 1, 1.,0.)
+#     seg3[:,1,:,:,:] = torch.where(seg == 2, 1.,0.)
+#     seg3[:,2,:,:,:] = torch.where(seg == 3, 1.,0.)
+#     return seg3
+
 
 def split_seg_labels(seg):
+    # seg = torch.tensor(seg, dtype = torch.float32)
+    seg3 = torch.zeros((seg.shape[0], 3, *seg.shape[1:])) #  (batch dimension, num_channels, depth, height, width)
+    
     # Split the segmentation labels into 3 channels
-    seg3 = torch.from_numpy(np.zeros(seg.shape))
-    seg3 = torch.cat((seg3,seg3,seg3), dim=1)
-    seg3[:,0,:,:,:] = torch.where(seg == 1, 1.,0.)
-    seg3[:,1,:,:,:] = torch.where(seg == 2, 1.,0.)
-    seg3[:,2,:,:,:] = torch.where(seg == 3, 1.,0.)
+    seg3[:, 0, :, :, :] = torch.where(seg == 1, 1., 0.)
+    seg3[:, 1, :, :, :] = torch.where(seg == 2, 1., 0.)
+    seg3[:, 2, :, :, :] = torch.where(seg == 3, 1., 0.)
     return seg3
-
 
 ## LAYER FREEZING
 

@@ -114,8 +114,10 @@ class LoadDatasetswClusterID(Dataset):
         clusterID = self.reverse_mapping.get(sampleID, None) # returns clusterID asssigned to sample if it is assigned, None otherwise.
 
         if clusterID is None:
-            print(f"Sample {path} not found in any cluster's assignment list.")
             clusterID = 5000 # big number to be assigned to unclustered samples.
+            if self.cluster_mapping != {}:
+                print(f"Sample {path} not found in any cluster's assignment list.")
+
 
 
         if self.gt_provided:
