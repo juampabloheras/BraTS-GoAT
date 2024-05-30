@@ -21,15 +21,16 @@ from lightning.pytorch.cli import LightningCLI
 from lightning.pytorch import Trainer, seed_everything
 from lightning.pytorch.callbacks import ModelCheckpoint
 from lightning.pytorch.callbacks import LearningRateMonitor
-
 import warnings
 
 from train_utils import *
 
 # Weights and Biases logger
 from lightning.pytorch.loggers import WandbLogger
+import random
 
-wandb_logger = WandbLogger(project="CSE547 Final Project")
+
+wandb_logger = WandbLogger(project="CSE547 Final Project", name = f"debugging GoAT {random.randint(0, 10000)}")
 
 
 # Lightning Module 
@@ -132,6 +133,7 @@ class LitGoAT(L.LightningModule):
         x4 = imgs[3]
         seg = imgs[4]
 
+        print('Seg shape: ', np.shape(seg))
         seg3 = split_seg_labels(seg).to(self.device)
 
         # Set the target either as overlapping or disjoint regions
@@ -149,6 +151,9 @@ class LitGoAT(L.LightningModule):
 
         output, pred_classification, latent = self.model(x_in, self.alpha) # equivalent to self.model(x_in, self.alpha) and self.forward(x_in)
         output = output.float()
+
+        print('Output shape: ', np.shape(output))
+        print('Mask shape: ', np.shape(mask))
 
         segmentation_loss = self.compute_loss(output, mask, self.loss_functions, self.weights)
         classifier_loss = self.domain_criterion(pred_classification, true_classification)
