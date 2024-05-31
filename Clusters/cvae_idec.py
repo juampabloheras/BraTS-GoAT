@@ -322,9 +322,9 @@ if __name__ == "__main__":
     parser.add_argument('--n_z', default=10, type=int)
     parser.add_argument('--dataset', type=str, default='brain')
     parser.add_argument('--pretrain_path', type=str, default=
-                        '/gscratch/amath/friesj2/BraTS-GoAT/clusters/saved_models/VAE/GoATs_idec.pkl')
+                        '/gscratch/amath/friesj2/BraTS-GoAT/Clusters/saved_models/VAE/GoATs_idec.pkl')
     # local: saved_models/VAE/GoATs_idec.pkl
-    # hyak: /gscratch/amath/friesj2/BraTS-GoAT/clusters/saved_models/VAE/GoATs_idec.pkl
+    # hyak: /gscratch/amath/friesj2/BraTS-GoAT/Clusters/saved_models/VAE/GoATs_idec.pkl
     parser.add_argument('--early_patience', type=int, default=10)
     parser.add_argument(
         '--gamma',
@@ -372,9 +372,9 @@ if __name__ == "__main__":
         print(args)
         
     if args.dataset == 'brain':
-        args.pretrain_path = '/gscratch/amath/friesj2/BraTS-GoAT/clusters/saved_models/VAE/GoATs_idec.pkl'
+        args.pretrain_path = '/gscratch/amath/friesj2/BraTS-GoAT/Clusters/saved_models/VAE/GoATs_idec.pkl'
         # locally : saved_models/VAE/GoATs_idec.pkl
-        # hyak: /gscratch/amath/friesj2/BraTS-GoAT/clusters/saved_models/VAE/GoATs_idec.pkl
+        # hyak: /gscratch/amath/friesj2/BraTS-GoAT/Clusters/saved_models/VAE/GoATs_idec.pkl
         args.n_clusters = 2
         args.n_z = 2
         args.batch_size = 16
