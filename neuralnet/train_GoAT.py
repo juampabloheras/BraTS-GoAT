@@ -190,6 +190,8 @@ class LitGoAT(L.LightningModule):
 
 
     def on_train_epoch_end(self):
+    # self.trainer.lr_scheduler_configs[0].scheduler.get_last_lr()[0]
+
         self.log('LearningRate', self.trainer.lr_scheduler_configs[0].scheduler.get_last_lr()[0], sync_dist = True)
         assert set(self.seg_loss_val_dict.keys()) == set(self.class_loss_val_dict.keys()), "Clusters in seg loss and class loss dictionaries are different."
         for clusterID in self.seg_loss_val_dict.keys():
@@ -210,16 +212,15 @@ class LitGoAT(L.LightningModule):
              
     
     def configure_optimizers(self):
-        optimizer = torch.optim.Adam(self.model.parameters(), lr=self.init_lr, weight_decay = 0, amsgrad= True)
-        lr_scheduler = {
-            'scheduler': torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=self.lr_lambda),
-            'interval': 'epoch',  
-            'frequency': 1,
-            'name': 'Adam_lr'
-        }
+        # optimizer = torch.optim.Adam(self.model.parameters(), lr=self.init_lr, weight_decay = 0, amsgrad= True)
+        # lr_scheduler_config = {
+        #     'scheduler': torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=self.lr_lambda),
+        #     'interval': 'epoch',  
+        #     'frequency': 1,
+        #     'name': 'Adam_lr'
+        # }
 
-
-        return [optimizer], [lr_scheduler]
+        return optimizer
 
     def lr_lambda(self, current_epoch):
         """Custom learning rate scheduler."""
@@ -286,7 +287,6 @@ if __name__ == '__main__':
                                 lr, power, eval_on_overlap, train_on_overlap) = parse_args() #definition in train_utils
 
 
-    model_architecture = MODEL_STR_TO_FUNC[model_str]
     alpha = alpha
     init_lr = lr
     train_on_overlap = train_on_overlap
@@ -306,6 +306,10 @@ if __name__ == '__main__':
     # Load cluster mapping
     with open(cluster_dict_path, 'rb') as file:
         cluster_mapping = pickle.load(file)
+    num_clusters = len(cluster_mapping)
+
+    # Instantiate model with correct number of clusters
+    model_architecture = MODEL_STR_TO_FUNC[model_str](img_ch = 4, output_ch = 3, num_domains = num_clusters)
 
     # Make checkpoint directory
     new_ckpt_dir = os.path.join(out_dir, 'new_checkpoints')

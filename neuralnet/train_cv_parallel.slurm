@@ -1,16 +1,15 @@
-#/bin/bash
-
+#!/bin/bash
 #SBATCH --job-name=train-cv-GoAT
 #SBATCH --mail-user=jehr@uw.edu
 #SBATCH --mail-type=ALL
 #SBATCH -A kurtlab
-#SBATCH -p ckpt
+#SBATCH -p gpu-a40
 #SBATCH --mem=10G
 #SBATCH --ntasks=1
 #SBATCH --time=00:10:00
-#SBATCH --output=/gscratch/kurtlab/juampablo/BraTS-GoAT/TESTS/test0513/output_train.txt
-#SBATCH --error=/gscratch/kurtlab/juampablo/BraTS-GoAT/TESTS/test0513/error_train.txt
-#SBATCH --chdir=/gscratch/kurtlab/juampablo/BraTS-GoAT/
+#SBATCH --output=/gscratch/kurtlab/juampablo/BraTS-GoAT/TESTS/test0530/output_train.txt
+#SBATCH --error=/gscratch/kurtlab/juampablo/BraTS-GoAT/TESTS/test0530/error_train.txt
+#SBATCH --chdir=/gscratch/kurtlab/juampablo/BraTS-GoAT/neuralnet
 
 
 # Number of cross-validation folds
@@ -21,7 +20,7 @@ NUM_FOLDS=5
 TRAIN_DIR='/gscratch/scrubbed/juampablo/BraTS-GoAT/DATA/training'
 TEST_DIR='/gscratch/scrubbed/juampablo/BraTS-GoAT/DATA/validation'
 CKPT_DIR='None'
-BASE_OUT_DIR='/gscratch/kurtlab/juampablo/BraTS-GoAT/TESTS/test0513/out_dir'
+BASE_OUT_DIR='/gscratch/kurtlab/juampablo/BraTS-GoAT/TESTS/test0530/out_dir'
 FOLDS_DIR='/gscratch/kurtlab/juampablo/BraTS-GoAT/neuralnet/CVFolds/cv-5-tianyi'
 
 CLUSTER_DICT='/gscratch/kurtlab/juampablo/BraTS-GoAT/neuralnet/cluster_dict.pkl'
@@ -45,7 +44,7 @@ RUN_IDENTIFIER=$(($RANDOM%1000 * $RANDOM + $RANDOM))
 
 
 # Cross-validation training
-for FOLD_NO in $(seq 0 $NUM_FOLDS); do
+for FOLD_NO in $(seq 0 $(($NUM_FOLDS - 1))); do
     OUT_DIR="${BASE_OUT_DIR}/fold_${FOLD_NO}"
     TRAIN_FILES_DIR="${OUT_DIR}/train_files"
     
@@ -88,10 +87,10 @@ for FOLD_NO in $(seq 0 $NUM_FOLDS); do
 #SBATCH --account=kurtlab
 #SBATCH --partition=ckpt
 #SBATCH --nodes=1
-#SBATCH --ntasks-per-node=12
+#SBATCH --cpus-per-task=12
 #SBATCH --mem=220G
 #SBATCH --time=4:00:00
-#SBATCH --chdir=/gscratch/kurtlab/brats2023/repos/juampablo/brats2023/brats2023/base
+#SBATCH --chdir=/mmfs1/gscratch/kurtlab/juampablo/BraTS-GoAT/neuralnet
 #SBATCH --export=all
 #SBATCH --output=${OUT_DIR}/output_train_fold_${FOLD_NO}.txt
 #SBATCH --error=${OUT_DIR}/error_train_fold_${FOLD_NO}.txt
@@ -101,7 +100,7 @@ source activate undergraddl
 
 python3 train_GoAT.py \
     --train_dir ${TRAIN_DIR[@]} \
-    --test_dir ${TEST_DIR[@]}
+    --test_dir ${TEST_DIR[@]} \
     --ckpt_dir $CKPT_DIR \
     --out_dir $OUT_DIR \
     --loss ${LOSS[@]} \
