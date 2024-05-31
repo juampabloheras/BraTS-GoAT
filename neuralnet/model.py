@@ -298,7 +298,9 @@ class DANNUNet3D(nn.Module):
         self.classifier = domain_classifier(CH_IN=nf*12, num_domains = num_domains)
 
     def forward(self, input, alpha = 1):
-        segmentation, latent, x1, x2, x3, x4, x5, x6 = self.UNet3D(input)
+        # segmentation, latent, x1, x2, x3, x4, x5, x6 = self.UNet3D(input)
+        segmentation, latent, _, _, _, _, _, _ = self.UNet3D(input)
+
 
         if alpha is not None: 
             reversed_input = GradReverse.apply(latent, alpha) 

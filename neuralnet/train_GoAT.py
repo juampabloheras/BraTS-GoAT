@@ -4,9 +4,8 @@ from utils import *
 from data import trans
 from data.datasets import LoadDatasetswClusterID
 
-#  import transforms ####
 from torchvision import transforms
-from train_utils import load_fold_file
+from train_utils import *
 from torch.utils.data import DataLoader
 
 import pickle
@@ -21,16 +20,16 @@ from lightning.pytorch.cli import LightningCLI
 from lightning.pytorch import Trainer, seed_everything
 from lightning.pytorch.callbacks import ModelCheckpoint
 from lightning.pytorch.callbacks import LearningRateMonitor
-import warnings
+from lightning.pytorch.callbacks import TQDMProgressBar
 
-from train_utils import *
 
 # Weights and Biases logger
 from lightning.pytorch.loggers import WandbLogger
 import random
 
+# To "properly utilize tensor cores"
+torch.set_float32_matmul_precision('medium')
 
-wandb_logger = WandbLogger(project="CSE547 Final Project", name = f"debugging GoAT {random.randint(0, 10000)}")
 
 
 # Lightning Module 
@@ -49,8 +48,15 @@ class LitGoAT(L.LightningModule):
         self.power = power
         self.max_epochs = max_epochs
         self.save_hyperparameters()
-        self.automatic_optimization = False
+        self.automatic_optimization = False # Necessary for learning rate scheduler
 
+        # Initialize dicts for logging
+        self.seg_loss_train_dict = {}
+        self.class_loss_train_dict = {}
+        self.seg_loss_val_dict = {}
+        self.class_loss_val_dict = {}
+
+        self.dice_loss = LOSS_STR_TO_FUNC['dice'] # from utils
 
 
     # @staticmethod
@@ -108,17 +114,23 @@ class LitGoAT(L.LightningModule):
 
         loss = self.loss_weights[0]*segmentation_loss + self.loss_weights[1]*classifier_loss
 
+        dice_loss = self.compute_loss(output, mask, [self.dice_loss], [1])
+
         # Log losses to TensorBoard (changing to WandB soon..)
         self.log("seg_loss", segmentation_loss, on_step=False, on_epoch=True, sync_dist=True)
         self.log("classif_loss", classifier_loss, on_step=False, on_epoch=True, sync_dist=True)
         self.log("backprop_loss", loss, on_step=False, on_epoch=True, sync_dist=True)
-        self.log('epoch_loss', loss, on_step=False, on_epoch=True, sync_dist=True) # Logs mean loss per epoch
-
-        try:
-            self.log(f'cluster{true_classification.item()}_seg_loss', segmentation_loss)
-            self.log(f'cluster{true_classification.item()}_classif_loss', classifier_loss)
-        except:
-            print(f"Classification {true_classification} not understood.")
+        self.log('dice_loss', dice_loss, on_step=False, on_epoch=True, sync_dist=True) # Logs mean loss per epoch
+        
+        if true_classification.nelement() == 1:
+            cluster_id = true_classification.item()
+            self.seg_loss_train_dict.setdefault(cluster_id, []).append(segmentation_loss.detach().cpu())
+            self.class_loss_train_dict.setdefault(cluster_id, []).append(classifier_loss.detach().cpu())
+        else:
+            for classification in true_classification:
+                cluster_id = classification.item()
+                self.seg_loss_train_dict.setdefault(cluster_id, []).append(segmentation_loss.detach().cpu())
+                self.class_loss_train_dict.setdefault(cluster_id, []).append(classifier_loss.detach().cpu())
 
         return loss
     
@@ -133,7 +145,7 @@ class LitGoAT(L.LightningModule):
         x4 = imgs[3]
         seg = imgs[4]
 
-        print('Seg shape: ', np.shape(seg))
+        # print('Seg shape: ', np.shape(seg))
         seg3 = split_seg_labels(seg).to(self.device)
 
         # Set the target either as overlapping or disjoint regions
@@ -152,8 +164,8 @@ class LitGoAT(L.LightningModule):
         output, pred_classification, latent = self.model(x_in, self.alpha) # equivalent to self.model(x_in, self.alpha) and self.forward(x_in)
         output = output.float()
 
-        print('Output shape: ', np.shape(output))
-        print('Mask shape: ', np.shape(mask))
+        # print('Output shape: ', np.shape(output))
+        # print('Mask shape: ', np.shape(mask))
 
         segmentation_loss = self.compute_loss(output, mask, self.loss_functions, self.weights)
         classifier_loss = self.domain_criterion(pred_classification, true_classification)
@@ -166,11 +178,34 @@ class LitGoAT(L.LightningModule):
         self.log("backprop_loss_val", loss, on_step=False, on_epoch=True, sync_dist=True)
         self.log('epoch_loss_val', loss, on_step=False, on_epoch=True, sync_dist=True) # Logs mean loss per epoch
 
-        try:
-            self.log(f'cluster{true_classification.item()}_seg_loss_val', segmentation_loss, sync_dist=True)
-            self.log(f'cluster{true_classification.item()}_classif_loss_val', classifier_loss, sync_dist=True)
-        except:
-            print(f"Classification {true_classification,item()} not understood.")
+        if true_classification.nelement() == 1:
+            cluster_id = true_classification.item()
+            self.seg_loss_val_dict.setdefault(cluster_id, []).append(segmentation_loss.detach().cpu())
+            self.class_loss_val_dict.setdefault(cluster_id, []).append(classifier_loss.detach().cpu())
+        else:
+            for classification in true_classification:
+                cluster_id = classification.item()
+                self.seg_loss_val_dict.setdefault(cluster_id, []).append(segmentation_loss.detach().cpu())
+                self.class_loss_val_dict.setdefault(cluster_id, []).append(classifier_loss.detach().cpu())
+
+
+    def on_train_epoch_end(self):
+        self.log('LearningRate', self.trainer.lr_scheduler_configs[0].scheduler.get_last_lr()[0], sync_dist = True)
+        assert set(self.seg_loss_val_dict.keys()) == set(self.class_loss_val_dict.keys()), "Clusters in seg loss and class loss dictionaries are different."
+        for clusterID in self.seg_loss_val_dict.keys():
+            self.log(f'cluster{clusterID}_seg_loss_val', np.mean(self.seg_loss_val_dict[clusterID]), sync_dist = True)
+            self.log(f'cluster{clusterID}_classif_loss_val', np.mean(self.class_loss_val_dict[clusterID]), sync_dist = True)
+
+        assert set(self.seg_loss_train_dict.keys()) == set(self.class_loss_train_dict.keys()), "Clusters in seg loss and class loss dictionaries are different."
+        for clusterID in self.seg_loss_train_dict.keys():
+            self.log(f'cluster{clusterID}_seg_loss_train', np.mean(self.seg_loss_train_dict[clusterID]), sync_dist = True)
+            self.log(f'cluster{clusterID}_classif_loss_train', np.mean(self.class_loss_train_dict[clusterID]), sync_dist = True)
+
+        # Reset after every epoch
+        self.seg_loss_train_dict = {}
+        self.class_loss_train_dict = {}
+        self.seg_loss_val_dict = {}
+        self.class_loss_val_dict = {}
             
              
     
@@ -179,7 +214,8 @@ class LitGoAT(L.LightningModule):
         lr_scheduler = {
             'scheduler': torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=self.lr_lambda),
             'interval': 'epoch',  
-            'frequency': 1
+            'frequency': 1,
+            'name': 'Adam_lr'
         }
 
 
@@ -215,12 +251,15 @@ class BraTSDataModule(L.LightningDataModule):
             self.brats_test = LoadDatasetswClusterID(self.test_data_dir, self.transforms, self.cluster_mapping,  normalized=True, gt_provided= False, partial_file_names = False)
 
     def train_dataloader(self):
+        print(f'Length of train dataset: {len(self.brats_train)}')
         return DataLoader(self.brats_train, batch_size=self.batch_size, num_workers=3)
 
-    def val_dataloader(self):
+    def val_dataloader(self):        
+        print(f'Length of val dataset: {len(self.brats_val)}')
         return DataLoader(self.brats_val, batch_size=self.batch_size, num_workers=3) 
 
     def test_dataloader(self):
+        print(f'Length of test dataset: {len(self.brats_test)}')
         return DataLoader(self.brats_test, batch_size=self.batch_size, num_workers=3) 
 
     @staticmethod
@@ -243,7 +282,8 @@ class BraTSDataModule(L.LightningDataModule):
 if __name__ == '__main__':
 
     (alpha, train_dir, test_dir, ckpt_dir, out_dir, loss_str, weights, loss_weights, 
-            model_str, partial_file_names, folds_dir, fold_no, cluster_dict, max_epochs, lr, power, eval_on_overlap, train_on_overlap) = parse_args() #definition in train_utils
+            model_str, partial_file_names, folds_dir, fold_no, cluster_dict, run_identifier, max_epochs, 
+                                lr, power, eval_on_overlap, train_on_overlap) = parse_args() #definition in train_utils
 
 
     model_architecture = MODEL_STR_TO_FUNC[model_str]
@@ -258,7 +298,7 @@ if __name__ == '__main__':
     cluster_dict_path = cluster_dict
 
     data_dir = train_dir
-    batch_size = 2  ######
+    batch_size = 1  ######
     test_data_dir = test_dir
     folds_dir = folds_dir
     fold_no = fold_no
@@ -280,19 +320,30 @@ if __name__ == '__main__':
     seed_everything(42, workers = True) # sets seeds for numpy, torch and python.random.
 
     # Define callbacks
-    lr_monitor = LearningRateMonitor(logging_interval='step')
+    lr_monitor = LearningRateMonitor(logging_interval='epoch')
     checkpoint_callback = ModelCheckpoint(every_n_epochs = 2, dirpath=new_ckpt_dir, filename='train-GoAT-{epoch:02d}-{seg_loss:.4f}-fold{fold_no:02d}', save_last = True, monitor = 'seg_loss', mode = 'min', save_top_k = 5)  # Note filename is NOT an fstring
 
-    # Instantiate Model
+    # Define Model
     model = LitGoAT(model_architecture, alpha, init_lr, train_on_overlap, eval_on_overlap, loss_functions, loss_weights, weights, power, max_epochs)
 
-    if os.path.exists(os.path.join(new_ckpt_dir,'last.ckpt')):
-        trainer = Trainer(max_epochs=max_epochs, default_root_dir=out_dir, callbacks=[lr_monitor, checkpoint_callback], logger=wandb_logger) 
-        print(f'Loaded checkpoint from: {os.path.join(new_ckpt_dir,"last.ckpt")}. Training model from here.')
-        trainer.fit(model, datamodule=dm, ckpt_path= os.path.join(new_ckpt_dir,'last.ckpt') )
+    # Define WandB logger
+    wandb_logger = WandbLogger(project="CSE547 Final Project", name = f"Debugging-GoAT-fold{fold_no}-{run_identifier}")
 
+    TRAINER_KWARGS = {
+    'max_epochs': max_epochs,
+    'default_root_dir': out_dir,
+    'strategy': 'auto',
+    'callbacks': [lr_monitor, checkpoint_callback, TQDMProgressBar(refresh_rate=75)],
+    'logger': wandb_logger,
+    }
+
+    # Define trainer
+    trainer = Trainer(**TRAINER_KWARGS) 
+
+    if os.path.exists(os.path.join(new_ckpt_dir,'last.ckpt')):
+        print(f'Loading checkpoint from: {os.path.join(new_ckpt_dir,"last.ckpt")}. Training model from here.')
+        trainer.fit(model, datamodule=dm, ckpt_path= os.path.join(new_ckpt_dir,'last.ckpt') )
     else:
-        trainer = Trainer(max_epochs=max_epochs, default_root_dir=out_dir, callbacks=[checkpoint_callback]) # Will automatically train with system devices and the maximum number of GPUs available (see documentation here: https://lightning.ai/docs/pytorch/stable/common/trainer.html)
         print("Starting training from the beginning.")
         trainer.fit(model, datamodule=dm)
 

@@ -39,42 +39,19 @@ MODEL_STR_TO_FUNC = {
 
 } # ***  All models here have output: [segmentation, classification, latent]  ***
 
-# def split_seg_labels(seg):
-#     # Split the segmentation labels into 3 channels
-#     seg3 = torch.from_numpy(np.zeros(seg.shape))
-#     seg3 = torch.cat((seg3,seg3,seg3), dim=1)
-#     seg3[:,0,:,:,:] = torch.where(seg == 1, 1.,0.)
-#     seg3[:,1,:,:,:] = torch.where(seg == 2, 1.,0.)
-#     seg3[:,2,:,:,:] = torch.where(seg == 3, 1.,0.)
-#     return seg3
-
-# ####### START HERE
-# def split_seg_labels(seg):
-#     seg_squeezed = seg.squeeze(1)  # Squeezes dimension 1 if it's of size 1
-#     seg3 = torch.zeros((seg.shape[0], 3, seg_squeezed.shape[1], seg_squeezed.shape[2], seg_squeezed.shape[3]))
-#     # Split the segmentation labels into 3 channels
-#     seg3[:, 0, :, :, :] = torch.where(seg == 1, 1., 0.)
-#     seg3[:, 1, :, :, :] = torch.where(seg == 2, 1., 0.)
-#     seg3[:, 2, :, :, :] = torch.where(seg == 3, 1., 0.)
-#     return seg3
 
 def split_seg_labels(seg):
-    # Correctly handle the singleton dimension
-    seg_squeezed = seg.squeeze(1)  # Squeeze out the second dimension only if it's a singleton
-
-    # Initialize seg3 without the extra singleton dimension
+    seg_squeezed = seg.squeeze(1)  # Squeezes dimension 1 if it's of size 1 (necessary for batch size > 1)
     seg3 = torch.zeros((seg.shape[0], 3, seg_squeezed.shape[1], seg_squeezed.shape[2], seg_squeezed.shape[3]), device=seg.device)
-
-    # Split the segmentation labels into 3 channels, using the squeezed version of seg
+    
+    # Split the segmentation labels into 3 channels
     seg3[:, 0, :, :, :] = torch.where(seg_squeezed == 1, 1., 0.)
     seg3[:, 1, :, :, :] = torch.where(seg_squeezed == 2, 1., 0.)
     seg3[:, 2, :, :, :] = torch.where(seg_squeezed == 3, 1., 0.)
-
     return seg3
 
 
 ## LAYER FREEZING
-
 FREEZE_STR_TO_LAYERS = {
     'encoder': ['Conv1', 'Conv2', 'Conv3', 'Conv4', 'Conv5', 'Conv6', 'Conv7'],
     'decoder': ['Up6', 'Up_conv6', 'Up5', 'Up_conv5', 'Up4', 'Up_conv4', 'Up3', 'Up_conv3', 'Conv_1x13', 'Up2', 'Up_conv2', 'Conv_1x12', 'Up1', 'Up_conv1', 'Conv_1x11'],

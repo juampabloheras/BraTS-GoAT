@@ -31,7 +31,7 @@ def parse_args():
     parser.add_argument('--folds_dir', type=str)
     parser.add_argument('--fold_no', type=int)
     parser.add_argument('--cluster_dict', type=str)
-
+    parser.add_argument('--run_identifier', type=int)
 
     # Optional arguments
     parser.add_argument('--epochs', type=int, default=100)
@@ -66,6 +66,8 @@ def parse_args():
     folds_dir = args.folds_dir
     fold_no = args.fold_no
     cluster_dict = args.cluster_dict
+    run_identifier = args.run_identifier
+
 
     max_epoch = args.epochs
     lr = args.lr
@@ -75,4 +77,4 @@ def parse_args():
     train_on_overlap = args.train_on_overlap
 
     return (alpha, train_dir, test_dir, ckpt_dir, out_dir, loss_str, weights, loss_weights, 
-            model_str, partial_file_names, folds_dir, fold_no, cluster_dict, max_epoch, lr, power, eval_on_overlap, train_on_overlap)
+            model_str, partial_file_names, folds_dir, fold_no, cluster_dict, run_identifier, max_epoch, lr, power, eval_on_overlap, train_on_overlap)

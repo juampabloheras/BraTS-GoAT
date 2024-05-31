@@ -40,6 +40,9 @@ ALPHA=1
 # Data Loader
 PARTIAL_FILE_NAMES_DIR=('All')
 
+# Used to index runs
+RUN_IDENTIFIER=$(($RANDOM%1000 * $RANDOM + $RANDOM))
+
 
 # Cross-validation training
 for FOLD_NO in $(seq 0 $NUM_FOLDS); do
@@ -110,8 +113,9 @@ python3 train_GoAT.py \
     --folds_dir $FOLDS_DIR \
     --fold_no $FOLD_NO \
     --cluster_dict $CLUSTER_DICT \
+    --run_identifier $RUN_IDENTIFIER \
     $TRAIN_ON_OVERLAP $EVAL_ON_OVERLAP
 EOT
 done
 
-# python3 train_GoAT.py --train_dir ${TRAIN_DIR[@]} --test_dir ${TEST_DIR[@]}  --ckpt_dir $CKPT_DIR --out_dir $OUT_DIR --loss ${LOSS[@]} --loss_weights ${LOSS_WEIGHTS[@]} --weights ${WEIGHTS[@]} --model $MODEL --alpha $ALPHA --partial_file_names_dir ${PARTIAL_FILE_NAMES_DIR[@]} --folds_dir $FOLDS_DIR --fold_no $FOLD_NO --cluster_dict $CLUSTER_DICT  $TRAIN_ON_OVERLAP $EVAL_ON_OVERLAP > output_debug.log 2> error_debug.log
+# python3 train_GoAT.py --train_dir ${TRAIN_DIR[@]} --test_dir ${TEST_DIR[@]}  --ckpt_dir $CKPT_DIR --out_dir $OUT_DIR --loss ${LOSS[@]} --loss_weights ${LOSS_WEIGHTS[@]} --weights ${WEIGHTS[@]} --model $MODEL --alpha $ALPHA --partial_file_names_dir ${PARTIAL_FILE_NAMES_DIR[@]} --folds_dir $FOLDS_DIR --fold_no $FOLD_NO --cluster_dict $CLUSTER_DICT --run_identifier $(($RANDOM%1000 * $RANDOM + $RANDOM)) $TRAIN_ON_OVERLAP $EVAL_ON_OVERLAP > output_debug.log 2> error_debug.log
