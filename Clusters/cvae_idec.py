@@ -375,7 +375,7 @@ if __name__ == "__main__":
         args.pretrain_path = '/gscratch/amath/friesj2/BraTS-GoAT/Clusters/saved_models/VAE/GoATs_idec.pkl'
         # locally : saved_models/VAE/GoATs_idec.pkl
         # hyak: /gscratch/amath/friesj2/BraTS-GoAT/Clusters/saved_models/VAE/GoATs_idec.pkl
-        args.n_clusters = 2
+        args.n_clusters = 6
         args.n_z = 2
         args.batch_size = 16
         dataset = BrainDataset()
