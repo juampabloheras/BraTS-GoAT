@@ -244,11 +244,13 @@ def train_idec(model):
             
             # evaluate clustering performance
             y_pred = tmp_q.cpu().numpy().argmax(1)
+            if epoch == epochs - 1:
+                print(y_pred)
             delta_label = np.sum(y_pred != y_pred_last).astype(
                 np.float32) / y_pred.shape[0]
             y_pred_last = y_pred
 
-            # we need an unsupervised quantification of clustering performance - dice score?
+            # we need an unsupervised quantification of clustering performance - sillhouette score?
 
             # acc[-1] = cluster_acc(y, y_pred)
             # nmi[-1] = nmi_score(y, y_pred)
