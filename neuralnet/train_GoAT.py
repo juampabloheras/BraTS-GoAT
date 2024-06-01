@@ -324,8 +324,35 @@ if __name__ == '__main__':
     # Define Model
     model = LitGoAT(model_architecture, alpha, init_lr, train_on_overlap, eval_on_overlap, loss_functions, loss_weights, weights, power, max_epochs)
 
+    def logger_setup(project_name, experiment_name):
+        # Attempt to load an existing run ID
+        existing_run_id = load_run_id()
+
+        if existing_run_id:
+            print(f"Resuming run: {existing_run_id}")
+            wandb_logger = WandbLogger(project=project_name, name=experiment_name, id=existing_run_id)
+        else:
+            print("Starting a new run")
+            wandb_logger = WandbLogger(project=project_name, name=experiment_name)
+            save_run_id(wandb_logger.experiment.id)
+
+        return wandb_logger
+
+    def load_run_id(filename="run_id.txt"):
+        try:
+            with open(filename, 'r') as file:
+                return file.read().strip()
+        except FileNotFoundError:
+            return None
+    def save_run_id(run_id, filename="run_id.txt"):
+        with open(filename, 'w') as file:
+            file.write(run_id)
+
+
     # Define WandB logger
-    wandb_logger = WandbLogger(project="CSE547 Final Project", name = f"Debugging-GoAT-fold{fold_no}-{run_identifier}")
+    # wandb_logger = WandbLogger(project="CSE547 Final Project", name = f"Debugging-GoAT-fold{fold_no}-{run_identifier}")
+
+    wandb_logger = logger_setup(project_name = "CSE547 Final Project", experiment_name = f"Debugging-GoAT-fold{fold_no}-{run_identifier}")
 
     TRAINER_KWARGS = {
     'max_epochs': max_epochs,

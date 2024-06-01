@@ -7,8 +7,8 @@
 #SBATCH --mem=10G
 #SBATCH --ntasks=1
 #SBATCH --time=00:10:00
-#SBATCH --output=/gscratch/kurtlab/juampablo/BraTS-GoAT/TESTS/test0531_agglom_k3/output_train.txt
-#SBATCH --error=/gscratch/kurtlab/juampablo/BraTS-GoAT/TESTS/test0531_agglom_k3/error_train.txt
+#SBATCH --output=/gscratch/kurtlab/juampablo/BraTS-GoAT/TESTS/gpua40_test0531_agglom_k3/output_train.txt
+#SBATCH --error=/gscratch/kurtlab/juampablo/BraTS-GoAT/TESTS/gpua40_test0531_agglom_k3/error_train.txt
 #SBATCH --chdir=/gscratch/kurtlab/juampablo/BraTS-GoAT/neuralnet
 
 
@@ -20,7 +20,7 @@ NUM_FOLDS=5
 TRAIN_DIR='/gscratch/scrubbed/juampablo/BraTS-GoAT/DATA/training'
 TEST_DIR='/gscratch/scrubbed/juampablo/BraTS-GoAT/DATA/validation'
 CKPT_DIR='None'
-BASE_OUT_DIR='/gscratch/kurtlab/juampablo/BraTS-GoAT/TESTS/test0531_agglom_k3/out_dir'
+BASE_OUT_DIR='/gscratch/kurtlab/juampablo/BraTS-GoAT/TESTS/gpua40_test0531_agglom_k3/out_dir'
 FOLDS_DIR='/gscratch/kurtlab/juampablo/BraTS-GoAT/neuralnet/CVFolds/cv-5-tianyi'
 
 
@@ -85,7 +85,7 @@ for FOLD_NO in $(seq 0 $(($NUM_FOLDS - 1))); do
 #SBATCH --mail-type=ALL
 #SBATCH --gpus-per-node=a40:2
 #SBATCH --account=kurtlab
-#SBATCH --partition=ckpt
+#SBATCH --partition=gpu-a40
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=12
 #SBATCH --mem=220G
