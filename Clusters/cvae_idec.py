@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 
 import gc
+import pickle
 import time
 import argparse
 import numpy as np
@@ -376,7 +377,7 @@ if __name__ == "__main__":
         # locally : saved_models/VAE/GoATs_idec.pkl
         # hyak: /gscratch/amath/friesj2/BraTS-GoAT/Clusters/saved_models/VAE/GoATs_idec.pkl
         args.n_clusters = 6
-        args.n_z = 2
+        args.n_z = 6
         args.batch_size = 16
         dataset = BrainDataset()
         args.n_input = dataset.x[0].shape
