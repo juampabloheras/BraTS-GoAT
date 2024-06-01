@@ -40,7 +40,7 @@ PARTIAL_FILE_NAMES_DIR=('All')
 
 # Used to index runs
 RUN_IDENTIFIER="agglomk3-$(($RANDOM%1000 * $RANDOM + $RANDOM))"
-CLUSTER_DICT='/mmfs1/gscratch/kurtlab/juampablo/BraTS-GoAT/neuralnet/cluster_dicts/agglom_k3_clusters.pkl'
+CLUSTER_DICT='/mmfs1/gscratch/kurtlab/juampablo/BraTS-GoAT/neuralnet/cluster_dicts/agglom_k_3_clusters.pkl'
 
 
 # Cross-validation training
