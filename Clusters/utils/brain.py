@@ -13,9 +13,9 @@ from torch.utils.data import Dataset
 ################################################################################
 ################################################################################
 
-def load_brain(path='../DATA/2Dviz/brain_data.npz'):
+def load_brain(path='/gscratch/amath/friesj2/DATA/brain_data.npz'):
     # hyak: /gscratch/amath/friesj2/DATA/brain_data.npz
-    # local: /DATA/2Dviz/brain_data.npz
+    # local: ../DATA/2Dviz/brain_data.npz
     f = np.load(path)
     x, y = f['x_train'], f['y_train']
     f.close()
