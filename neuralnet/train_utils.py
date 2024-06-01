@@ -78,3 +78,30 @@ def parse_args():
 
     return (alpha, train_dir, test_dir, ckpt_dir, out_dir, loss_str, weights, loss_weights, 
             model_str, partial_file_names, folds_dir, fold_no, cluster_dict, run_identifier, max_epoch, lr, power, eval_on_overlap, train_on_overlap)
+
+
+
+
+def logger_setup(project_name, experiment_name):
+    # Attempt to load an existing run ID
+    existing_run_id = load_run_id()
+
+    if existing_run_id:
+        print(f"Resuming run: {existing_run_id}")
+        wandb_logger = WandbLogger(project=project_name, name=experiment_name, id=existing_run_id)
+    else:
+        print("Starting a new run")
+        wandb_logger = WandbLogger(project=project_name, name=experiment_name)
+        save_run_id(wandb_logger.experiment.id)
+
+    return wandb_logger
+
+def load_run_id(filename="run_id.txt"):
+    try:
+        with open(filename, 'r') as file:
+            return file.read().strip()
+    except FileNotFoundError:
+        return None
+def save_run_id(run_id, filename="run_id.txt"):
+    with open(filename, 'w') as file:
+        file.write(run_id)
