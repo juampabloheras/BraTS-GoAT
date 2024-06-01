@@ -31,7 +31,7 @@ def parse_args():
     parser.add_argument('--folds_dir', type=str)
     parser.add_argument('--fold_no', type=int)
     parser.add_argument('--cluster_dict', type=str)
-    parser.add_argument('--run_identifier', type=int)
+    parser.add_argument('--run_identifier', type=str)
 
     # Optional arguments
     parser.add_argument('--epochs', type=int, default=100)

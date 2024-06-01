@@ -83,6 +83,40 @@ class domain_classifier(nn.Module):
         
         return y
 
+# Domain classifier for extended latent
+class domain_classifier_extended_latent(nn.Module):
+    def __init__(self, CH_IN, num_domains=3, linear_dim=256):
+        super().__init__()
+        
+        # Convolutional layers
+        self.conv1 = nn.Conv3d(CH_IN, 64, kernel_size=3, padding=0)
+        self.conv2 = nn.Conv3d(64, 128, kernel_size=1, padding=1)
+        self.conv3 = nn.Conv3d(128, 128, kernel_size=3, padding=0)  # New conv layer
+        
+        # Pooling layer
+        self.pool = nn.MaxPool3d(kernel_size=2)
+        
+        # Fully connected layers
+        # linear_dim needs to be recalculated based on the output size from conv3 and subsequent pooling
+        self.fc1 = nn.Linear(linear_dim, 64)
+        self.fc2 = nn.Linear(64, num_domains)
+
+    def forward(self, x):
+        # Convolution and Pool layers
+        x = self.pool(F.relu(self.conv1(x)))
+        x = self.pool(F.relu(self.conv2(x)))
+        x = self.pool(F.relu(self.conv3(x)))  # Applying pool after the new conv layer
+        
+        # Flatten the output for the fully connected layer
+        x = x.view(x.size(0), -1)
+        
+        # Fully-connected layers
+        x = F.relu(self.fc1(x))
+        y = F.softmax(self.fc2(x), dim=1)
+        
+        return y
+
+
 
 # Encoder-Decoder architecture
 class EncoderDecoder3D(nn.Module):
@@ -259,33 +293,31 @@ class DANNUNet3DExtendedLatent(nn.Module):
         nf = 8
 
         self.UNet3D = U_Net3D(nf=nf, img_ch=img_ch, output_ch= output_ch)
-        self.classifier = domain_classifier(CH_IN=nf*47, num_domains = num_domains) # nf*47 is sum of channels in extended latent
+        self.classifier = domain_classifier_extended_latent(CH_IN=32, num_domains = num_domains, linear_dim = 662400)
+
+        self.conv1x1 = nn.Conv3d(96, 16, kernel_size=1)
+        self.upsample = nn.Upsample(size=(128, 192, 128), mode='trilinear', align_corners=True)
+
 
     def forward(self, input, alpha = 1):
         segmentation, latent, x1, x2, x3, x4, x5, x6 = self.UNet3D(input)
 
-        # Flatten each tensor
-        latent_flat = latent.view(latent.size(0), -1)
-        x1_flat = x1.view(x1.size(0), -1)
-        x2_flat = x2.view(x2.size(0), -1)
-        x3_flat = x3.view(x3.size(0), -1)
-        x4_flat = x4.view(x4.size(0), -1)
-        x5_flat = x5.view(x5.size(0), -1)
-        x6_flat = x6.view(x6.size(0), -1)
+        # 1x1 conv and upsample the latent representation to match dimensions with the output shape
+        x = self.conv1x1(latent)
+        resized_latent = self.upsample(x)
 
-        # Concatenate the flattened tensors
-        extended_latent = torch.cat([latent_flat, x1_flat, x2_flat, x3_flat, x4_flat, x5_flat, x6_flat], dim=1)
-
+        extended_latent = torch.cat((resized_latent, x1), dim=1)
 
         if alpha is not None:
             reversed_latent = GradReverse.apply(extended_latent, alpha) # reverse gradient at the bottleneck
             classification = self.classifier(reversed_latent) # classify using the latent + x1, x2, ... , x6  
-            # CLASSIFIER dimensions don't match
         else:
             # If alpha is not provided, perform regular classification
             classification = self.classifier(extended_latent)
         
+
         return [segmentation, classification, extended_latent]
+
 
 
 
@@ -381,7 +413,7 @@ def testModel(model, data_dir, num_samples, with_latent = False, cluster_mapping
 
 
 if __name__ == '__main__':
-    model = DANNUNet3D()
+    model = DANNUNet3DExtendedLatent()
     data_dir = '/gscratch/scrubbed/juampablo/BraTS-GoAT/DATA/training'
     num_samples = 4
     with_latent = True # bool if latent is returned

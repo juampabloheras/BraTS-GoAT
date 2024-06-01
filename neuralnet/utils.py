@@ -35,7 +35,7 @@ LOSS_STR_TO_FUNC = {
 MODEL_STR_TO_FUNC = {
         'autoencoder-with-classifier': model.DANNEncoderDecoder3D,
         'unet-DANN': model.DANNUNet3D,
-        'extended-latent-unet-DANN': model.DANNUNet3DExtendedLatent
+        'extended-latent-unet-DANN': model.DANNUNet3DExtendedLatent 
 
 } # ***  All models here have output: [segmentation, classification, latent]  ***
 

@@ -48,7 +48,7 @@ class LitGoAT(L.LightningModule):
         self.power = power
         self.max_epochs = max_epochs
         self.save_hyperparameters()
-        self.automatic_optimization = False # Necessary for learning rate scheduler
+        # self.automatic_optimization = False 
 
         # Initialize dicts for logging
         self.seg_loss_train_dict = {}
@@ -190,9 +190,6 @@ class LitGoAT(L.LightningModule):
 
 
     def on_train_epoch_end(self):
-    # self.trainer.lr_scheduler_configs[0].scheduler.get_last_lr()[0]
-
-        self.log('LearningRate', self.trainer.lr_scheduler_configs[0].scheduler.get_last_lr()[0], sync_dist = True)
         assert set(self.seg_loss_val_dict.keys()) == set(self.class_loss_val_dict.keys()), "Clusters in seg loss and class loss dictionaries are different."
         for clusterID in self.seg_loss_val_dict.keys():
             self.log(f'cluster{clusterID}_seg_loss_val', np.mean(self.seg_loss_val_dict[clusterID]), sync_dist = True)
@@ -208,19 +205,17 @@ class LitGoAT(L.LightningModule):
         self.class_loss_train_dict = {}
         self.seg_loss_val_dict = {}
         self.class_loss_val_dict = {}
-            
              
     
     def configure_optimizers(self):
-        # optimizer = torch.optim.Adam(self.model.parameters(), lr=self.init_lr, weight_decay = 0, amsgrad= True)
-        # lr_scheduler_config = {
-        #     'scheduler': torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=self.lr_lambda),
-        #     'interval': 'epoch',  
-        #     'frequency': 1,
-        #     'name': 'Adam_lr'
-        # }
-
-        return optimizer
+        optimizer = torch.optim.Adam(self.model.parameters(), lr=self.init_lr, weight_decay = 0, amsgrad= True)
+        lr_scheduler_config = {
+            'scheduler': torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=self.lr_lambda),
+            'interval': 'epoch',  
+            'frequency': 1,
+            'name': 'Adam_lr'
+        }
+        return [optimizer], [lr_scheduler_config]
 
     def lr_lambda(self, current_epoch):
         """Custom learning rate scheduler."""
@@ -274,8 +269,7 @@ class BraTSDataModule(L.LightningDataModule):
                 for directory in data_dir
                     for file_name in os.listdir(directory)
                         if file_name not in val_file_names
-            ] 
-        
+            ]         
         return train_file_names, val_file_names
     
 

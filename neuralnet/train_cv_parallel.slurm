@@ -7,8 +7,8 @@
 #SBATCH --mem=10G
 #SBATCH --ntasks=1
 #SBATCH --time=00:10:00
-#SBATCH --output=/gscratch/kurtlab/juampablo/BraTS-GoAT/TESTS/test0530/output_train.txt
-#SBATCH --error=/gscratch/kurtlab/juampablo/BraTS-GoAT/TESTS/test0530/error_train.txt
+#SBATCH --output=/gscratch/kurtlab/juampablo/BraTS-GoAT/TESTS/test0531_agglom_k3/output_train.txt
+#SBATCH --error=/gscratch/kurtlab/juampablo/BraTS-GoAT/TESTS/test0531_agglom_k3/error_train.txt
 #SBATCH --chdir=/gscratch/kurtlab/juampablo/BraTS-GoAT/neuralnet
 
 
@@ -20,10 +20,9 @@ NUM_FOLDS=5
 TRAIN_DIR='/gscratch/scrubbed/juampablo/BraTS-GoAT/DATA/training'
 TEST_DIR='/gscratch/scrubbed/juampablo/BraTS-GoAT/DATA/validation'
 CKPT_DIR='None'
-BASE_OUT_DIR='/gscratch/kurtlab/juampablo/BraTS-GoAT/TESTS/test0530/out_dir'
+BASE_OUT_DIR='/gscratch/kurtlab/juampablo/BraTS-GoAT/TESTS/test0531_agglom_k3/out_dir'
 FOLDS_DIR='/gscratch/kurtlab/juampablo/BraTS-GoAT/neuralnet/CVFolds/cv-5-tianyi'
 
-CLUSTER_DICT='/gscratch/kurtlab/juampablo/BraTS-GoAT/neuralnet/cluster_dict.pkl'
 
 # Training parameters
 LOSS=('mse' 'cross-entropy')
@@ -40,7 +39,8 @@ ALPHA=1
 PARTIAL_FILE_NAMES_DIR=('All')
 
 # Used to index runs
-RUN_IDENTIFIER=$(($RANDOM%1000 * $RANDOM + $RANDOM))
+RUN_IDENTIFIER="agglomk3-$(($RANDOM%1000 * $RANDOM + $RANDOM))"
+CLUSTER_DICT='/mmfs1/gscratch/kurtlab/juampablo/BraTS-GoAT/neuralnet/cluster_dicts/agglom_k3_clusters.pkl'
 
 
 # Cross-validation training
@@ -89,7 +89,7 @@ for FOLD_NO in $(seq 0 $(($NUM_FOLDS - 1))); do
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=12
 #SBATCH --mem=220G
-#SBATCH --time=4:00:00
+#SBATCH --time=6:00:00
 #SBATCH --chdir=/mmfs1/gscratch/kurtlab/juampablo/BraTS-GoAT/neuralnet
 #SBATCH --export=all
 #SBATCH --output=${OUT_DIR}/output_train_fold_${FOLD_NO}.txt
