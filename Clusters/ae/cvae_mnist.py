@@ -62,7 +62,7 @@ class CVAE(nn.Module):
         #return eps.mul(std).add_(mean)
     
     def encoder(self, x):
-        x, self.idx1 = self.pool(self.relu(self.C_En1(x)))
+        x, self.idx1 = self.pool(self.relu(self.B_En1(self.C_En1(x))))
         # batch normal 1 removed
         x, self.idx2 = self.pool(self.relu(self.B_En2(self.C_En2(x))))
         x, self.idx3 = self.pool(self.relu(self.B_En3(self.C_En3(x))))

@@ -218,7 +218,7 @@ def train_idec(model):
     since = time.time()
 ############################################################################
 ############################################################################
-    epochs = 50
+    epochs = 60
     # default: 20
     model.train()
     for epoch in range(epochs):
@@ -235,7 +235,7 @@ def train_idec(model):
             #_, tmp_q = model(data)
             _, tmp_q, z = fw_model(model, loader)
             
-            if epoch == 15 or epoch == 30 or epoch == 50:
+            if epoch == 20 or epoch == 40 or epoch == 60:
                 z_trunc = z[:2000]
                 plott = Tsne(2, z_trunc.numpy(), str(epoch))
                 # plott.tsne_plt(y_trunc)
