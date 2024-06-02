@@ -9,8 +9,8 @@ class CVAE(nn.Module):
         self.in_shape = in_shape
         self.n_z = n_z
         c, h, w = in_shape
-        self.z_dim_h = h//2**2 # receptive field downsampled 2 times
-        self.z_dim_w = w//2**2
+        self.z_dim_h = h//2**4 # receptive field downsampled 2 times
+        self.z_dim_w = w//2**4
         
         self.encoder = nn.Sequential(
             # nn.BatchNorm2d(c),
@@ -53,7 +53,7 @@ class CVAE(nn.Module):
 
     def decode(self, z):
         out = self.z_develop(z)
-        out = out.reshape(z.shape[0], 64, self.z_dim_h, self.z_dim_w)
+        out = out.reshape(z.shape[0], 64, 4 * self.z_dim_h, 4 * self.z_dim_w)
         out = self.decoder(out)
         return out
 
