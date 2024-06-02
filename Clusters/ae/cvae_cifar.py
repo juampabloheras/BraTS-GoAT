@@ -35,8 +35,6 @@ class CVAE(nn.Module):
         # nn.MaxPool2d(2, 2, return_indices=True)
         # 64, 2, 2
         
-
-
         self.z_mean = nn.Linear(64 * self.z_dim_w * self.z_dim_h, n_z)
         self.z_var = nn.Linear(64 * self.z_dim_w * self.z_dim_h, n_z)
 

@@ -9,7 +9,8 @@ class CVAE(nn.Module):
         self.in_shape = in_shape
         self.n_z = n_z
         c, h, w = in_shape
-        self.z_dim = h//2**2 # receptive field downsampled 2 times
+        self.z_dim_h = h//2**4 # receptive field downsampled 2 times
+        self.z_dim_w = w//2**4
         
         self.encoder = nn.Sequential(
             #nn.BatchNorm2d(c),
@@ -24,9 +25,9 @@ class CVAE(nn.Module):
             nn.ReLU(),
         )
         
-        self.z_mean = nn.Linear(64 * self.z_dim**2, n_z)
-        self.z_var = nn.Linear(64 * self.z_dim**2, n_z)
-        self.z_develop = nn.Linear(n_z, 64 * self.z_dim**2)
+        self.z_mean = nn.Linear(64 * self.z_dim_h * self.z_dim_w, n_z)
+        self.z_var = nn.Linear(64 * self.z_dim_h * self.z_dim_w, n_z)
+        self.z_develop = nn.Linear(n_z, 64 * self.z_dim_h * self.z_dim_w)
         
         self.decoder = nn.Sequential(
             nn.ConvTranspose2d(64, 32, kernel_size=4, stride=2, padding=1),
