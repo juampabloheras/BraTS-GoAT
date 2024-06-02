@@ -9,7 +9,8 @@ class CVAE(nn.Module):
         self.in_shape = in_shape
         self.n_z = n_z
         c, h, w = in_shape
-        self.z_dim = h//2**2 # receptive field downsampled 2 times
+        self.z_dim_h = h//2**4 # receptive field downsampled 2 times
+        self.z_dim_w = w//2**4
         
         self.C_En1 = nn.Conv2d(c, 6, kernel_size=3, stride=1, padding=1)
         self.B_En1 = nn.BatchNorm2d(6)
@@ -21,29 +22,29 @@ class CVAE(nn.Module):
         
         self.C_En2 = nn.Conv2d(6, 16, kernel_size=3, stride=1, padding=1)
         self.B_En2 = nn.BatchNorm2d(16)
-        # nn.MaxPool2d(2, 2, return_indices=True)
+        nn.MaxPool2d(2, 2, return_indices=True)
         # 16, 8, 8
         
-        #self.C_En3 = nn.Conv2d(16, 32, kernel_size=3, stride=1, padding=1)
-        #self.B_En3 = nn.BatchNorm2d(32)
-        # nn.MaxPool2d(2, 2, return_indices=True)
+        self.C_En3 = nn.Conv2d(16, 32, kernel_size=3, stride=1, padding=1)
+        self.B_En3 = nn.BatchNorm2d(32)
+        nn.MaxPool2d(2, 2, return_indices=True)
         # 32, 4, 4
         
-        #self.C_En4 = nn.Conv2d(32, 64, kernel_size=3, stride=1, padding=1)
-        #self.B_En4 = nn.BatchNorm2d(64)
-        # nn.MaxPool2d(2, 2, return_indices=True)
+        self.C_En4 = nn.Conv2d(32, 64, kernel_size=3, stride=1, padding=1)
+        self.B_En4 = nn.BatchNorm2d(64)
+        nn.MaxPool2d(2, 2, return_indices=True)
         # 64, 2, 2
         
-        self.z_mean = nn.Linear(16 * self.z_dim**2, n_z)
-        self.z_var = nn.Linear(16 * self.z_dim**2, n_z)
-        self.z_develop = nn.Linear(n_z, 16 * self.z_dim**2)
+        self.z_mean = nn.Linear(64 * self.z_dim**2, n_z)
+        self.z_var = nn.Linear(64 * self.z_dim**2, n_z)
+        self.z_develop = nn.Linear(n_z, 64 * self.z_dim**2)
         
         self.unpool = nn.MaxUnpool2d(2, 2)
-        #self.CT_De4 = nn.ConvTranspose2d(64, 32, kernel_size=3, stride=1, padding=1)
-        #self.B_De4 = nn.BatchNorm2d(32)
+        self.CT_De4 = nn.ConvTranspose2d(64, 32, kernel_size=3, stride=1, padding=1)
+        self.B_De4 = nn.BatchNorm2d(32)
         
-        #self.CT_De3 = nn.ConvTranspose2d(32, 16, kernel_size=3, stride=1, padding=1)
-        #self.B_De3 = nn.BatchNorm2d(16)
+        self.CT_De3 = nn.ConvTranspose2d(32, 16, kernel_size=3, stride=1, padding=1)
+        self.B_De3 = nn.BatchNorm2d(16)
         
         self.CT_De2 = nn.ConvTranspose2d(16, 6, kernel_size=3, stride=1, padding=1)
         self.B_De2 = nn.BatchNorm2d(6)
@@ -63,13 +64,13 @@ class CVAE(nn.Module):
     def encoder(self, x):
         x, self.idx1 = self.pool(self.relu(self.B_En1(self.C_En1(x))))
         x, self.idx2 = self.pool(self.relu(self.B_En2(self.C_En2(x))))
-        #x, self.idx3 = self.pool(self.relu(self.B_En3(self.C_En3(x))))
-        #x, self.idx4 = self.pool(self.relu(self.B_En4(self.C_En4(x))))
+        x, self.idx3 = self.pool(self.relu(self.B_En3(self.C_En3(x))))
+        x, self.idx4 = self.pool(self.relu(self.B_En4(self.C_En4(x))))
         return x
     
     def decoder(self, x):
-        #x = self.relu(self.B_De4(self.CT_De4(self.unpool(x, self.idx4))))
-        #x = self.relu(self.B_De3(self.CT_De3(self.unpool(x, self.idx3))))
+        x = self.relu(self.B_De4(self.CT_De4(self.unpool(x, self.idx4))))
+        x = self.relu(self.B_De3(self.CT_De3(self.unpool(x, self.idx3))))
         x = self.relu(self.B_De2(self.CT_De2(self.unpool(x, self.idx2))))
         x = self.sig(self.CT_De1(self.unpool(x, self.idx1)))
         return x
