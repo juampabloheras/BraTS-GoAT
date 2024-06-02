@@ -32,8 +32,8 @@ from utils.brain import BrainDataset
 
 from ae.vae_trainer import VAETrainer
 #from ae.cvae_glau import CVAE
-from ae.cvae_cifar import CVAE
-#from ae.cvae import CVAE
+#from ae.cvae_cifar import CVAE
+from ae.cvae import CVAE
 from ae.vae import VAE
 
 
@@ -86,7 +86,7 @@ class IDEC(nn.Module):
                  n_z,
                  n_clusters,
                  alpha=1,
-                 pretrain_path='saved_models/VAE/cvae_cifar10.pkl'):
+                 pretrain_path='saved_models/VAE/GoATs_idec.pkl'):
         super(IDEC, self).__init__()
         self.alpha = 1.0
         self.pretrain_path = pretrain_path
