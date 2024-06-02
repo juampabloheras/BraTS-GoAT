@@ -25,9 +25,9 @@ class CVAE(nn.Module):
             nn.ReLU(),
         )
         
-        self.z_mean = nn.Linear(64 * self.z_dim_h * self.z_dim_w, n_z)
-        self.z_var = nn.Linear(64 * self.z_dim_h * self.z_dim_w, n_z)
-        self.z_develop = nn.Linear(n_z, 64 * self.z_dim_h * self.z_dim_w)
+        self.z_mean = nn.Linear(16 * self.z_dim_h * self.z_dim_w, n_z)
+        self.z_var = nn.Linear(16 * self.z_dim_h * self.z_dim_w, n_z)
+        self.z_develop = nn.Linear(n_z, 16 * self.z_dim_h * self.z_dim_w)
         
         self.decoder = nn.Sequential(
             nn.ConvTranspose2d(64, 32, kernel_size=4, stride=2, padding=1),
