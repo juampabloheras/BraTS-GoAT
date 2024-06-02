@@ -33,8 +33,8 @@ from utils.brain import BrainDataset
 from ae.vae_trainer import VAETrainer
 #from ae.cvae_glau import CVAE
 #from ae.cvae_cifar import CVAE
-# from ae.cvae import CVAE
-from ae.cvae_mnist import CVAE
+from ae.cvae import CVAE
+#from ae.cvae_mnist import CVAE
 from ae.vae import VAE
 
 
@@ -235,7 +235,7 @@ def train_idec(model):
             #_, tmp_q = model(data)
             _, tmp_q, z = fw_model(model, loader)
             
-            if epoch == 5 or epoch == 10 or epoch == 15:
+            if epoch == 15 or epoch == 30 or epoch == 45:
                 z_trunc = z[:2000]
                 plott = Tsne(2, z_trunc.numpy(), str(epoch))
                 # plott.tsne_plt(y_trunc)
@@ -385,7 +385,7 @@ if __name__ == "__main__":
         # locally : saved_models/VAE/GoATs_idec.pkl
         # hyak: /gscratch/amath/friesj2/BraTS-GoAT/Clusters/saved_models/VAE/GoATs_idec.pkl
         args.n_clusters = 6
-        args.n_z = 24
+        args.n_z = 48
         args.batch_size = 16
         dataset = BrainDataset()
         args.n_input = dataset.x[0].shape

@@ -13,7 +13,7 @@ class CVAE(nn.Module):
         self.z_dim_w = w//2**4
         
         self.encoder = nn.Sequential(
-            #nn.BatchNorm2d(c),
+            # nn.BatchNorm2d(c),
             nn.Conv2d(c, 32, kernel_size=4, stride=2, padding=1),
             # CIFAR 32, 16, 16 # Mnist 32, 14, 14
             nn.BatchNorm2d(32),
@@ -53,7 +53,7 @@ class CVAE(nn.Module):
 
     def decode(self, z):
         out = self.z_develop(z)
-        out = out.view(z.size(0), 64, self.z_dim, self.z_dim)
+        out = out.reshape(z.shape[0], 64, self.z_dim, self.z_dim)
         out = self.decoder(out)
         return out
 
