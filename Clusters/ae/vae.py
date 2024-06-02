@@ -7,6 +7,7 @@ class VAE(nn.Module):
         super().__init__()
         c, h, w = in_shape
         
+        # original - Lin 500 - Lin 1000
         self.encoder = nn.Sequential(
             nn.Linear(c*h*w, 500), 
             nn.BatchNorm1d(500),
@@ -14,13 +15,25 @@ class VAE(nn.Module):
             nn.Linear(500, 1000),
             nn.BatchNorm1d(1000),
             nn.LeakyReLU(),
+            nn.Linear(1000, 1500),
+            nn.BatchNorm1d(1500),
+            nn.LeakyReLU(),
+            nn.Linear(1500, 2000),
+            nn.BatchNorm1d(2000),
+            nn.LeakyReLU()
         )
         
-        self.z_mean = nn.Linear(1000, n_z)
-        self.z_var = nn.Linear(1000, n_z)
-        self.z_develop = nn.Linear(n_z, 1000)
+        self.z_mean = nn.Linear(2000, n_z)
+        self.z_var = nn.Linear(2000, n_z)
+        self.z_develop = nn.Linear(n_z, 2000)
         
         self.decoder = nn.Sequential(
+            nn.Linear(2000, 1500),
+            nn.BatchNorm1d(1500),
+            nn.ReLU(),
+            nn.Linear(1500, 1000),
+            nn.BatchNorm1d(1000),
+            nn.ReLU(),
             nn.Linear(1000, 500), 
             nn.BatchNorm1d(500),
             nn.ReLU(),
