@@ -35,9 +35,9 @@ class CVAE(nn.Module):
         nn.MaxPool2d(2, 2, return_indices=True)
         # 64, 2, 2
         
-        self.z_mean = nn.Linear(64 * self.z_dim**2, n_z)
-        self.z_var = nn.Linear(64 * self.z_dim**2, n_z)
-        self.z_develop = nn.Linear(n_z, 64 * self.z_dim**2)
+        self.z_mean = nn.Linear(64 * self.z_dim_w * self.z_dim_h, n_z)
+        self.z_var = nn.Linear(64 * self.z_dim_w * self.z_dim_h, n_z)
+        self.z_develop = nn.Linear(n_z, 64 * self.z_dim_w * self.z_dim_h)
         
         self.unpool = nn.MaxUnpool2d(2, 2)
         self.CT_De4 = nn.ConvTranspose2d(64, 32, kernel_size=3, stride=1, padding=1)
