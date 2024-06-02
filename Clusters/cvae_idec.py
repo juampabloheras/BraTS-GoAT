@@ -33,8 +33,8 @@ from utils.brain import BrainDataset
 from ae.vae_trainer import VAETrainer
 #from ae.cvae_glau import CVAE
 #from ae.cvae_cifar import CVAE
-from ae.cvae import CVAE
-#from ae.cvae_mnist import CVAE
+#from ae.cvae import CVAE
+from ae.cvae_mnist import CVAE
 from ae.vae import VAE
 
 
@@ -246,12 +246,13 @@ def train_idec(model):
             
             # evaluate clustering performance
             y_pred = tmp_q.cpu().numpy().argmax(1)
-            if epoch == epochs - 1:
+            if epoch == epochs:
                 # empty dict to file with assignments
                 # final_clustering = dict.fromkeys(np.range(args.n_clusters), [])
                 #for _ in _:
                     # fill in this dict and save as file  
                 print(y_pred)
+                np.save('clusters.npy', np.array(y_pred))
             delta_label = np.sum(y_pred != y_pred_last).astype(
                 np.float32) / y_pred.shape[0]
             y_pred_last = y_pred
