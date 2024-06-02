@@ -218,7 +218,7 @@ def train_idec(model):
     since = time.time()
 ############################################################################
 ############################################################################
-    epochs = 100
+    epochs = 75
     # default: 20
     model.train()
     for epoch in range(epochs):
@@ -235,7 +235,7 @@ def train_idec(model):
             #_, tmp_q = model(data)
             _, tmp_q, z = fw_model(model, loader)
             
-            if epoch == epochs//4 or epoch == epochs//2 or epoch == epochs:
+            if epoch == epochs//3 or epoch == epochs//2 or epoch == epochs:
                 z_trunc = z[:2000]
                 plott = Tsne(2, z_trunc.numpy(), str(epoch))
                 # plott.tsne_plt(y_trunc)
@@ -246,7 +246,7 @@ def train_idec(model):
             
             # evaluate clustering performance
             y_pred = tmp_q.cpu().numpy().argmax(1)
-            if epoch == epochs:
+            if epoch == epochs - 1:
                 # empty dict to file with assignments
                 # final_clustering = dict.fromkeys(np.range(args.n_clusters), [])
                 #for _ in _:
@@ -268,10 +268,10 @@ def train_idec(model):
             print('epoch {}/{}:'.format(epoch + 1, epochs), 'Silhoutte {:.4f}'.format(silhouette[-1]),
                   'time {:.0f}m {:.0f}s'.format(time_elapsed // 60, time_elapsed % 60))
 
-            if epoch > 0 and delta_label < args.tol:
-                print('delta_label {:.4f}'.format(delta_label), '< tol', args.tol)
-                print('Reached tolerance threshold. Stopping training.')
-                break
+            #if epoch > 0 and delta_label < args.tol:
+            #    print('delta_label {:.4f}'.format(delta_label), '< tol', args.tol)
+            #    print('Reached tolerance threshold. Stopping training.')
+            #    break
                 
         for batch_idx, (x, _, idx) in enumerate(train_loader):
             x = x.to(device)
