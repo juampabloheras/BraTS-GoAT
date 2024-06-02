@@ -33,8 +33,8 @@ from utils.brain import BrainDataset
 from ae.vae_trainer import VAETrainer
 #from ae.cvae_glau import CVAE
 #from ae.cvae_cifar import CVAE
-from ae.cvae import CVAE
-#from ae.cvae_mnist import CVAE
+#from ae.cvae import CVAE
+from ae.cvae_mnist import CVAE
 from ae.vae import VAE
 
 
