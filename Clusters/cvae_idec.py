@@ -235,7 +235,7 @@ def train_idec(model):
             #_, tmp_q = model(data)
             _, tmp_q, z = fw_model(model, loader)
             
-            if epoch == 15 or epoch == 30 or epoch == 45:
+            if epoch == 15 or epoch == 30 or epoch == 50:
                 z_trunc = z[:2000]
                 plott = Tsne(2, z_trunc.numpy(), str(epoch))
                 # plott.tsne_plt(y_trunc)
@@ -248,7 +248,7 @@ def train_idec(model):
             y_pred = tmp_q.cpu().numpy().argmax(1)
             if epoch == epochs - 1:
                 # empty dict to file with assignments
-                final_clustering = dict.fromkeys(np.range(args.n_clusters), [])
+                # final_clustering = dict.fromkeys(np.range(args.n_clusters), [])
                 #for _ in _:
                     # fill in this dict and save as file  
                 print(y_pred)
