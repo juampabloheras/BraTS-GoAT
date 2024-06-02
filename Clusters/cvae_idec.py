@@ -183,6 +183,7 @@ def train_idec(model):
     recon_loss_t = []
     kl_loss_t = []
     loss_t = []
+    final_clustering = {}
     
     train_loader = DataLoader(dataset, batch_size=args.batch_size, shuffle=True)
     optimizer = Adam(model.parameters(), lr=args.lr)
@@ -216,7 +217,7 @@ def train_idec(model):
     since = time.time()
 ############################################################################
 ############################################################################
-    epochs = 20
+    epochs = 50
     # default: 20
     model.train()
     for epoch in range(epochs):
@@ -245,6 +246,10 @@ def train_idec(model):
             # evaluate clustering performance
             y_pred = tmp_q.cpu().numpy().argmax(1)
             if epoch == epochs - 1:
+                # empty dict to file with assignments
+                final_clustering = dict.fromkeys(np.range(args.n_clusters), [])
+                #for _ in _:
+                    # fill in this dict and save as file  
                 print(y_pred)
             delta_label = np.sum(y_pred != y_pred_last).astype(
                 np.float32) / y_pred.shape[0]
