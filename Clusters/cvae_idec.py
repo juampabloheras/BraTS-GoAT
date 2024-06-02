@@ -218,7 +218,7 @@ def train_idec(model):
     since = time.time()
 ############################################################################
 ############################################################################
-    epochs = 60
+    epochs = 100
     # default: 20
     model.train()
     for epoch in range(epochs):
@@ -235,7 +235,7 @@ def train_idec(model):
             #_, tmp_q = model(data)
             _, tmp_q, z = fw_model(model, loader)
             
-            if epoch == 20 or epoch == 40 or epoch == 60:
+            if epoch == epochs//4 or epoch == epochs//2 or epoch == epochs:
                 z_trunc = z[:2000]
                 plott = Tsne(2, z_trunc.numpy(), str(epoch))
                 # plott.tsne_plt(y_trunc)
@@ -385,7 +385,7 @@ if __name__ == "__main__":
         # locally : saved_models/VAE/GoATs_idec.pkl
         # hyak: /gscratch/amath/friesj2/BraTS-GoAT/Clusters/saved_models/VAE/GoATs_idec.pkl
         args.n_clusters = 6
-        args.n_z = 48
+        args.n_z = 96
         args.batch_size = 16
         dataset = BrainDataset()
         args.n_input = dataset.x[0].shape
