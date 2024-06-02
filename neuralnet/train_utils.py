@@ -1,4 +1,7 @@
 import argparse
+from lightning.pytorch.loggers import WandbLogger
+import os
+
 
 def load_fold_file(file_path):
     with open(file_path, 'r') as file:
@@ -82,9 +85,10 @@ def parse_args():
 
 
 
-def logger_setup(project_name, experiment_name):
+def logger_setup(project_name, experiment_name, out_dir):
     # Attempt to load an existing run ID
-    existing_run_id = load_run_id()
+    path_to_id_file = os.path.join(out_dir,"run_id.txt")
+    existing_run_id = load_run_id(path_to_id_file)
 
     if existing_run_id:
         print(f"Resuming run: {existing_run_id}")
@@ -92,7 +96,7 @@ def logger_setup(project_name, experiment_name):
     else:
         print("Starting a new run")
         wandb_logger = WandbLogger(project=project_name, name=experiment_name)
-        save_run_id(wandb_logger.experiment.id)
+        save_run_id(wandb_logger.experiment.id, path_to_id_file)
 
     return wandb_logger
 

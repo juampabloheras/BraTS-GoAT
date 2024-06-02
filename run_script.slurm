@@ -11,8 +11,8 @@
 #SBATCH --ntasks=2
 #SBATCH --time=03:00:00
 #SBATCH --output=/gscratch/kurtlab/juampablo/BraTS-GoAT/output_val_eval.txt
-
 #SBATCH --error=/gscratch/kurtlab/juampablo/BraTS-GoAT/error_val_eval.txt
+#SBATCH --chdir=/mmfs1/gscratch/kurtlab/juampablo/BraTS-GoAT/
 
 
 

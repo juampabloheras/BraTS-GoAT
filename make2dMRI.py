@@ -26,6 +26,9 @@ def make2dMRI(in_dir, out_dir, contrasts_list=[0,1, 2, 3], slice_no=63, gt_provi
     # Make sure output directory exists
     os.makedirs(out_dir, exist_ok=True)
 
+
+    filenames_list = []
+
     compiled_X_list = []
     compiled_Y_list = []
     # Iterate over DataLoader
@@ -33,8 +36,10 @@ def make2dMRI(in_dir, out_dir, contrasts_list=[0,1, 2, 3], slice_no=63, gt_provi
         # Iterate over each image in the batch
         for i in range(len(filename_ids)):
             filename_id = filename_ids[i]
+            filenames_list.append(filename_id)
+            print(f'Processed {filename_id}')
 
-            # print(f'Type Imags: {type(imgs)}')
+            # print(f'Type Imags: {type(imgs)}')s
             # print(f'Shape Imgs: {np.shape(np.array(imgs))}')
 
             slice_list = []
@@ -50,6 +55,8 @@ def make2dMRI(in_dir, out_dir, contrasts_list=[0,1, 2, 3], slice_no=63, gt_provi
 
             compiled_X_list.append(X)
             compiled_Y_list.append(Y)
+
+
     
     compiled_X_array = np.array(compiled_X_list)
     compiled_Y_array = np.array(compiled_Y_list)
@@ -57,12 +64,12 @@ def make2dMRI(in_dir, out_dir, contrasts_list=[0,1, 2, 3], slice_no=63, gt_provi
     print(f'Shape compiled X: {np.shape(X)}')
     print(f'Shape compiled Y: {np.shape(Y)}')
 
-
+    filenames_list = np.array(filenames_list)
 
     # Define image save path, check if image has already been made
     save_path_npz = os.path.join(out_dir, 'brain_data.npz')            
 
-    np.savez(save_path_npz, x_train=compiled_X_array, y_train=compiled_Y_array)
+    np.savez(save_path_npz, x_train=compiled_X_array, y_train=compiled_Y_array, filenames=filenames_list)
     print(f'Saved {filename_id} in {save_path_npz}!')
 
 

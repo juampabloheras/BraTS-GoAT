@@ -7,8 +7,8 @@
 #SBATCH --mem=10G
 #SBATCH --ntasks=1
 #SBATCH --time=00:10:00
-#SBATCH --output=/gscratch/kurtlab/juampablo/BraTS-GoAT/TESTS/gpua40_test0531_agglom_k3/output_train.txt
-#SBATCH --error=/gscratch/kurtlab/juampablo/BraTS-GoAT/TESTS/gpua40_test0531_agglom_k3/error_train.txt
+#SBATCH --output=/gscratch/kurtlab/juampablo/BraTS-GoAT/TESTS/test0601_dec/output_train.txt
+#SBATCH --error=/gscratch/kurtlab/juampablo/BraTS-GoAT/TESTS/test0601_dec/error_train.txt
 #SBATCH --chdir=/gscratch/kurtlab/juampablo/BraTS-GoAT/neuralnet
 
 
@@ -20,7 +20,7 @@ NUM_FOLDS=5
 TRAIN_DIR='/gscratch/scrubbed/juampablo/BraTS-GoAT/DATA/training'
 TEST_DIR='/gscratch/scrubbed/juampablo/BraTS-GoAT/DATA/validation'
 CKPT_DIR='None'
-BASE_OUT_DIR='/gscratch/kurtlab/juampablo/BraTS-GoAT/TESTS/gpua40_test0531_agglom_k3/out_dir'
+BASE_OUT_DIR='/gscratch/kurtlab/juampablo/BraTS-GoAT/TESTS/test0601_dec/out_dir'
 FOLDS_DIR='/gscratch/kurtlab/juampablo/BraTS-GoAT/neuralnet/CVFolds/cv-5-tianyi'
 
 
@@ -39,8 +39,9 @@ ALPHA=1
 PARTIAL_FILE_NAMES_DIR=('All')
 
 # Used to index runs
-RUN_IDENTIFIER="agglomk3-$(($RANDOM%1000 * $RANDOM + $RANDOM))"
-CLUSTER_DICT='/mmfs1/gscratch/kurtlab/juampablo/BraTS-GoAT/neuralnet/cluster_dicts/agglom_k_3_clusters.pkl'
+# RUN_IDENTIFIER="newrun-$(($RANDOM%1000 * $RANDOM + $RANDOM))"
+RUN_IDENTIFIER="dec_run0601"
+CLUSTER_DICT='/mmfs1/gscratch/kurtlab/juampablo/BraTS-GoAT/neuralnet/cluster_dicts/dec_cluster.pkl'
 
 
 # Cross-validation training
@@ -85,7 +86,7 @@ for FOLD_NO in $(seq 0 $(($NUM_FOLDS - 1))); do
 #SBATCH --mail-type=ALL
 #SBATCH --gpus-per-node=a40:2
 #SBATCH --account=kurtlab
-#SBATCH --partition=gpu-a40
+#SBATCH --partition=ckpt
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=12
 #SBATCH --mem=220G

@@ -48,7 +48,8 @@ class LitGoAT(L.LightningModule):
         self.power = power
         self.max_epochs = max_epochs
         self.save_hyperparameters()
-        # self.automatic_optimization = False 
+        self.Dice = Dice() # from utils
+        self.HD95 = HD95() # from utils
 
         # Initialize dicts for logging
         self.seg_loss_train_dict = {}
@@ -56,7 +57,25 @@ class LitGoAT(L.LightningModule):
         self.seg_loss_val_dict = {}
         self.class_loss_val_dict = {}
 
-        self.dice_loss = LOSS_STR_TO_FUNC['dice'] # from utils
+        self.dice_train_dict = {}
+        self.hd95_train_dict = {}
+        self.dice_val_dict = {}
+        self.hd95_val_dict = {}
+
+        self.dice1_val_dict = {}
+        self.dice2_val_dict = {}
+        self.dice3_val_dict = {}
+        self.hd1_val_dict = {}
+        self.hd2_val_dict = {}
+        self.hd3_val_dict = {}
+
+        # Training metrics dictionaries
+        self.dice1_train_dict = {}
+        self.dice2_train_dict = {}
+        self.dice3_train_dict = {}
+        self.hd1_train_dict = {}
+        self.hd2_train_dict = {}
+        self.hd3_train_dict = {}
 
 
     # @staticmethod
@@ -70,10 +89,16 @@ class LitGoAT(L.LightningModule):
 
             loss += temp * loss_weights[n]
         return loss
-    
-    def forward(self, x): # Forward pass used for inference, not training
-        x = self.model(x, self.alpha)
-        return x
+
+    # @staticmethod
+    def compute_metric(self, output, mask, metric):
+        D1 = metric(output[:, 0, :, :, :], mask[:, 0, :, :, :])
+        D2 = metric(output[:, 1, :, :, :], mask[:, 1, :, :, :])
+        D3 = metric(output[:, 2, :, :, :], mask[:, 2, :, :, :])
+        D_list = [D1, D2, D3]
+        D_list = [D for D in D_list if D is not  float('NaN')]
+        D_avg = sum(D_list) / len(D_list) if D_list else float('NaN')
+        return D1, D2, D3, D_avg
 
     def training_step(self, batch, batch_idx): 
         
@@ -114,23 +139,56 @@ class LitGoAT(L.LightningModule):
 
         loss = self.loss_weights[0]*segmentation_loss + self.loss_weights[1]*classifier_loss
 
-        dice_loss = self.compute_loss(output, mask, [self.dice_loss], [1])
+        Dice1, Dice2, Dice3, mean_Dice = self.compute_metric(output, mask, self.Dice)
+        # HD1, HD2, HD3, mean_HD = self.compute_metric(output, mask, self.HD95)
 
         # Log losses to TensorBoard (changing to WandB soon..)
         self.log("seg_loss", segmentation_loss, on_step=False, on_epoch=True, sync_dist=True)
         self.log("classif_loss", classifier_loss, on_step=False, on_epoch=True, sync_dist=True)
         self.log("backprop_loss", loss, on_step=False, on_epoch=True, sync_dist=True)
-        self.log('dice_loss', dice_loss, on_step=False, on_epoch=True, sync_dist=True) # Logs mean loss per epoch
-        
+
+        self.log("Dice1", Dice1, on_step=False, on_epoch=True, sync_dist=True)
+        self.log("Dice2", Dice2, on_step=False, on_epoch=True, sync_dist=True)
+        self.log("Dice3", Dice3, on_step=False, on_epoch=True, sync_dist=True)
+        self.log("mean_Dice", mean_Dice, on_step=False, on_epoch=True, sync_dist=True) 
+
+        # self.log("HD1", HD1, on_step=False, on_epoch=True, sync_dist=True)
+        # self.log("HD2", HD2, on_step=False, on_epoch=True, sync_dist=True)
+        # self.log("HD3", HD3, on_step=False, on_epoch=True, sync_dist=True)
+        # self.log("mean_HD", mean_HD, on_step=False, on_epoch=True, sync_dist=True) 
+ 
+        # print('type dice1', type(Dice1))
+        # print(Dice1)
+
+
         if true_classification.nelement() == 1:
             cluster_id = true_classification.item()
             self.seg_loss_train_dict.setdefault(cluster_id, []).append(segmentation_loss.detach().cpu())
             self.class_loss_train_dict.setdefault(cluster_id, []).append(classifier_loss.detach().cpu())
+            self.dice_train_dict.setdefault(cluster_id, []).append(mean_Dice.detach().cpu())
+        #     # self.hd95_train_dict.setdefault(cluster_id, []).append(mean_HD.detach().cpu())
+
+
+            self.dice1_train_dict.setdefault(cluster_id, []).append(Dice1.detach().cpu())
+            self.dice2_train_dict.setdefault(cluster_id, []).append(Dice2.detach().cpu())
+            self.dice3_train_dict.setdefault(cluster_id, []).append(Dice3.detach().cpu())
+            # self.hd1_train_dict.setdefault(cluster_id, []).append(HD1.detach().cpu())
+            # self.hd2_train_dict.setdefault(cluster_id, []).append(HD2.detach().cpu())
+            # self.hd3_train_dict.setdefault(cluster_id, []).append(HD3.detach().cpu())
         else:
             for classification in true_classification:
                 cluster_id = classification.item()
                 self.seg_loss_train_dict.setdefault(cluster_id, []).append(segmentation_loss.detach().cpu())
                 self.class_loss_train_dict.setdefault(cluster_id, []).append(classifier_loss.detach().cpu())
+                self.dice_train_dict.setdefault(cluster_id, []).append(mean_Dice.detach().cpu())
+        #         # self.hd95_train_dict.setdefault(cluster_id, []).append(mean_HD.detach().cpu())
+
+                self.dice1_train_dict.setdefault(cluster_id, []).append(Dice1.detach().cpu())
+                self.dice2_train_dict.setdefault(cluster_id, []).append(Dice2.detach().cpu())
+                self.dice3_train_dict.setdefault(cluster_id, []).append(Dice3.detach().cpu())
+        #         self.hd1_train_dict.setdefault(cluster_id, []).append(HD1.detach().cpu())
+        #         self.hd2_train_dict.setdefault(cluster_id, []).append(HD2.detach().cpu())
+        #         self.hd3_train_dict.setdefault(cluster_id, []).append(HD3.detach().cpu())
 
         return loss
     
@@ -172,33 +230,94 @@ class LitGoAT(L.LightningModule):
 
         loss = self.loss_weights[0]*segmentation_loss + self.loss_weights[1]*classifier_loss
 
+        Dice1, Dice2, Dice3, mean_Dice = self.compute_metric(output, mask, self.Dice)
+        # HD1, HD2, HD3, mean_HD = self.compute_metric(output, mask, self.HD95)
+
         # Log losses to TensorBoard (changing to WandB soon..)
         self.log("seg_loss_val", segmentation_loss, on_step=False, on_epoch=True, sync_dist=True)
         self.log("classif_loss_val", classifier_loss, on_step=False, on_epoch=True, sync_dist=True)
         self.log("backprop_loss_val", loss, on_step=False, on_epoch=True, sync_dist=True)
         self.log('epoch_loss_val', loss, on_step=False, on_epoch=True, sync_dist=True) # Logs mean loss per epoch
 
+
+        self.log("Dice1_val", Dice1, on_step=False, on_epoch=True, sync_dist=True)
+        self.log("Dice2_val", Dice2, on_step=False, on_epoch=True, sync_dist=True)
+        self.log("Dice3_val", Dice3, on_step=False, on_epoch=True, sync_dist=True)
+        self.log("mean_Dice_val", mean_Dice, on_step=False, on_epoch=True, sync_dist=True) 
+
+        # self.log("HD1_val", HD1, on_step=False, on_epoch=True, sync_dist=True)
+        # self.log("HD2_val", HD2, on_step=False, on_epoch=True, sync_dist=True)
+        # self.log("HD3_val", HD3, on_step=False, on_epoch=True, sync_dist=True)
+        # self.log("mean_HD_val", mean_HD, on_step=False, on_epoch=True, sync_dist=True) 
+
+        # print('type dice1', type(Dice1))
+        # print('Dice1', Dice1)
+        # print('type hd1', type(HD1))
+        # print('HD1', HD1)
+
+
         if true_classification.nelement() == 1:
             cluster_id = true_classification.item()
             self.seg_loss_val_dict.setdefault(cluster_id, []).append(segmentation_loss.detach().cpu())
             self.class_loss_val_dict.setdefault(cluster_id, []).append(classifier_loss.detach().cpu())
+            self.dice_val_dict.setdefault(cluster_id, []).append(mean_Dice.detach().cpu())
+            # self.hd95_val_dict.setdefault(cluster_id, []).append(mean_HD.detach().cpu())
+
+            self.dice1_val_dict.setdefault(cluster_id, []).append(Dice1.detach().cpu())
+            self.dice2_val_dict.setdefault(cluster_id, []).append(Dice2.detach().cpu())
+            self.dice3_val_dict.setdefault(cluster_id, []).append(Dice3.detach().cpu())
+        #     self.hd1_val_dict.setdefault(cluster_id, []).append(HD1.detach().cpu())
+        #     self.hd2_val_dict.setdefault(cluster_id, []).append(HD2.detach().cpu())
+        #     self.hd3_val_dict.setdefault(cluster_id, []).append(HD3.detach().cpu())
+
         else:
             for classification in true_classification:
                 cluster_id = classification.item()
                 self.seg_loss_val_dict.setdefault(cluster_id, []).append(segmentation_loss.detach().cpu())
                 self.class_loss_val_dict.setdefault(cluster_id, []).append(classifier_loss.detach().cpu())
+                self.dice_val_dict.setdefault(cluster_id, []).append(mean_Dice.detach().cpu())
+        #         # self.hd95_val_dict.setdefault(cluster_id, []).append(mean_HD.detach().cpu())
+
+                self.dice1_val_dict.setdefault(cluster_id, []).append(Dice1.detach().cpu())
+                self.dice2_val_dict.setdefault(cluster_id, []).append(Dice2.detach().cpu())
+                self.dice3_val_dict.setdefault(cluster_id, []).append(Dice3.detach().cpu())
+        #         self.hd1_val_dict.setdefault(cluster_id, []).append(HD1.detach().cpu())
+        #         self.hd2_val_dict.setdefault(cluster_id, []).append(HD2.detach().cpu())
+        #         self.hd3_val_dict.setdefault(cluster_id, []).append(HD3.detach().cpu())
 
 
     def on_train_epoch_end(self):
-        assert set(self.seg_loss_val_dict.keys()) == set(self.class_loss_val_dict.keys()), "Clusters in seg loss and class loss dictionaries are different."
-        for clusterID in self.seg_loss_val_dict.keys():
-            self.log(f'cluster{clusterID}_seg_loss_val', np.mean(self.seg_loss_val_dict[clusterID]), sync_dist = True)
-            self.log(f'cluster{clusterID}_classif_loss_val', np.mean(self.class_loss_val_dict[clusterID]), sync_dist = True)
+        # assert set(self.seg_loss_val_dict.keys()) == set(self.class_loss_val_dict.keys()), "Clusters in seg loss and class loss dictionaries are different."
+        # for clusterID in self.seg_loss_val_dict.keys():
+        #     self.log(f'cluster{clusterID}_seg_loss_val', np.mean(self.seg_loss_val_dict[clusterID]), sync_dist = True)
+        #     self.log(f'cluster{clusterID}_classif_loss_val', np.mean(self.class_loss_val_dict[clusterID]), sync_dist = True)
 
-        assert set(self.seg_loss_train_dict.keys()) == set(self.class_loss_train_dict.keys()), "Clusters in seg loss and class loss dictionaries are different."
-        for clusterID in self.seg_loss_train_dict.keys():
-            self.log(f'cluster{clusterID}_seg_loss_train', np.mean(self.seg_loss_train_dict[clusterID]), sync_dist = True)
-            self.log(f'cluster{clusterID}_classif_loss_train', np.mean(self.class_loss_train_dict[clusterID]), sync_dist = True)
+        #     # Dice metrics
+        #     self.log(f'cluster{clusterID}_Dice1_val', np.mean(self.dice1_val_dict[clusterID]), sync_dist=True)
+        #     self.log(f'cluster{clusterID}_Dice2_val', np.mean(self.dice2_val_dict[clusterID]), sync_dist=True)
+        #     self.log(f'cluster{clusterID}_Dice3_val', np.mean(self.dice3_val_dict[clusterID]), sync_dist=True)
+
+        #     # HD metrics
+        #     self.log(f'cluster{clusterID}_HD1_val', np.mean(self.hd1_val_dict[clusterID]), sync_dist=True)
+        #     self.log(f'cluster{clusterID}_HD2_val', np.mean(self.hd2_val_dict[clusterID]), sync_dist=True)
+        #     self.log(f'cluster{clusterID}_HD3_val', np.mean(self.hd3_val_dict[clusterID]), sync_dist=True)
+
+
+
+        # assert set(self.seg_loss_train_dict.keys()) == set(self.class_loss_train_dict.keys()), "Clusters in seg loss and class loss dictionaries are different."
+        # for clusterID in self.seg_loss_train_dict.keys():
+        #     self.log(f'cluster{clusterID}_seg_loss_train', np.mean(self.seg_loss_train_dict[clusterID]), sync_dist = True)
+        #     self.log(f'cluster{clusterID}_classif_loss_train', np.mean(self.class_loss_train_dict[clusterID]), sync_dist = True)
+
+        #     # Dice metrics
+        #     self.log(f'cluster{clusterID}_Dice1_train', np.mean(self.dice1_train_dict[clusterID]), sync_dist=True)
+        #     self.log(f'cluster{clusterID}_Dice2_train', np.mean(self.dice2_train_dict[clusterID]), sync_dist=True)
+        #     self.log(f'cluster{clusterID}_Dice3_train', np.mean(self.dice3_train_dict[clusterID]), sync_dist=True)
+
+        #     # HD metrics
+        #     self.log(f'cluster{clusterID}_HD1_train', np.mean(self.hd1_train_dict[clusterID]), sync_dist=True)
+        #     self.log(f'cluster{clusterID}_HD2_train', np.mean(self.hd2_train_dict[clusterID]), sync_dist=True)
+        #     self.log(f'cluster{clusterID}_HD3_train', np.mean(self.hd3_train_dict[clusterID]), sync_dist=True)
 
         # Reset after every epoch
         self.seg_loss_train_dict = {}
@@ -327,7 +446,7 @@ if __name__ == '__main__':
     # Define WandB logger
     # wandb_logger = WandbLogger(project="CSE547 Final Project", name = f"Debugging-GoAT-fold{fold_no}-{run_identifier}")
 
-    wandb_logger = logger_setup(project_name = "CSE547 Final Project", experiment_name = f"Debugging-GoAT-fold{fold_no}-{run_identifier}") # in train_utils
+    wandb_logger = logger_setup(project_name = "CSE547 Final Project Runs", experiment_name = f"GoAT-fold{fold_no}-{run_identifier}", out_dir = out_dir) # in train_utils
 
     TRAINER_KWARGS = {
     'max_epochs': max_epochs,
