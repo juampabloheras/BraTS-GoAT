@@ -84,7 +84,7 @@ class CVAE(nn.Module):
 
     def decode(self, z):
         out = self.z_develop(z)
-        out = out.reshape(z.shape[0], 4, self.z_dim_h, self.z_dim_w)
+        out = out.reshape(z.shape[0], 16, self.z_dim_h * 2, self.z_dim_w * 2)
         # original (z.shape, 16, height, width)
         out = self.decoder(out)
         return out
