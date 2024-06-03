@@ -394,7 +394,7 @@ if __name__ == "__main__":
     
     if args.dataset == 'skin':
         args.pretrain_path = 'saved_models/VAE/cvae_skin.pkl'
-        args.n_clusters = 7
+        args.n_clusters = 8
         dataset = SkinDatasetTrain()
         dataset_test = SkinDatasetTest()
         args.n_input = dataset.x[0].shape
