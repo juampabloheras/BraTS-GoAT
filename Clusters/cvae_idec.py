@@ -238,7 +238,7 @@ def train_idec(model):
             if epoch == epochs//3 or epoch == epochs//2 or epoch == epochs:
                 z_trunc = z[:2000]
                 plott = Tsne(2, z_trunc.numpy(), str(epoch))
-                # plott.tsne_plt(y_trunc)
+                plott.tsne_plt(z_trunc)
             # update target distribution p
             tmp_q = tmp_q.data
             p = target_distribution(tmp_q)
