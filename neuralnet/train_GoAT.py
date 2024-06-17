@@ -431,6 +431,7 @@ if __name__ == '__main__':
         os.system('chmod a+rwx ' + new_ckpt_dir)
 
     # Instantiate DataModule
+    print('Loading Fold {fold_no}')
     dm = BraTSDataModule(data_dir = data_dir, batch_size = batch_size, test_data_dir = test_data_dir, folds_dir = folds_dir, fold_no = fold_no, cluster_mapping=cluster_mapping)
     
     # Set seeds
