@@ -42,7 +42,6 @@ class LitUNet(L.LightningModule):
         self.eval_on_overlap = eval_on_overlap
         self.loss_functions = loss_functions
         self.loss_weights = loss_weights
-        self.domain_criterion = nn.CrossEntropyLoss()
         self.alpha = alpha
         self.weights = weights
         self.power = power
@@ -96,7 +95,7 @@ class LitUNet(L.LightningModule):
         D2 = metric(output[:, 1, :, :, :], mask[:, 1, :, :, :])
         D3 = metric(output[:, 2, :, :, :], mask[:, 2, :, :, :])
         D_list = [D1, D2, D3]
-        D_list = [D for D in D_list if D is not  float('NaN')]
+        D_list = [D for D in D_list if D is not float('NaN')]
         D_avg = sum(D_list) / len(D_list) if D_list else float('NaN')
         return D1, D2, D3, D_avg
 
@@ -143,7 +142,6 @@ class LitUNet(L.LightningModule):
 
         # Log losses to TensorBoard (changing to WandB soon..)
         self.log("seg_loss", segmentation_loss, on_step=False, on_epoch=True, sync_dist=True)
-        self.log("classif_loss", classifier_loss, on_step=False, on_epoch=True, sync_dist=True)
         self.log("backprop_loss", loss, on_step=False, on_epoch=True, sync_dist=True)
 
         self.log("Dice1", Dice1, on_step=False, on_epoch=True, sync_dist=True)
@@ -163,7 +161,6 @@ class LitUNet(L.LightningModule):
         if true_classification.nelement() == 1:
             cluster_id = true_classification.item()
             self.seg_loss_train_dict.setdefault(cluster_id, []).append(segmentation_loss.detach().cpu())
-            self.class_loss_train_dict.setdefault(cluster_id, []).append(classifier_loss.detach().cpu())
             self.dice_train_dict.setdefault(cluster_id, []).append(mean_Dice.detach().cpu())
         #     # self.hd95_train_dict.setdefault(cluster_id, []).append(mean_HD.detach().cpu())
 
@@ -178,7 +175,6 @@ class LitUNet(L.LightningModule):
             for classification in true_classification:
                 cluster_id = classification.item()
                 self.seg_loss_train_dict.setdefault(cluster_id, []).append(segmentation_loss.detach().cpu())
-                self.class_loss_train_dict.setdefault(cluster_id, []).append(classifier_loss.detach().cpu())
                 self.dice_train_dict.setdefault(cluster_id, []).append(mean_Dice.detach().cpu())
         #         # self.hd95_train_dict.setdefault(cluster_id, []).append(mean_HD.detach().cpu())
 
@@ -193,7 +189,7 @@ class LitUNet(L.LightningModule):
     
     def validation_step(self, batch, batch_idx):
 
-        subject_id, imgs, true_classification = batch
+        subject_id, imgs = batch
 
         # Unpack the data
         x1 = imgs[0]
@@ -218,23 +214,21 @@ class LitUNet(L.LightningModule):
 
         x_in = torch.cat((x1, x2, x3, x4), dim=1)
 
-        output, pred_classification, latent = self.model(x_in, self.alpha) # equivalent to self.model(x_in, self.alpha) and self.forward(x_in)
+        output = self.model(x_in, self.alpha) # equivalent to self.model(x_in, self.alpha) and self.forward(x_in)
         output = output.float()
 
         # print('Output shape: ', np.shape(output))
         # print('Mask shape: ', np.shape(mask))
 
         segmentation_loss = self.compute_loss(output, mask, self.loss_functions, self.weights)
-        classifier_loss = self.domain_criterion(pred_classification, true_classification)
 
-        loss = self.loss_weights[0]*segmentation_loss + self.loss_weights[1]*classifier_loss
+        loss = segmentation_loss 
 
         Dice1, Dice2, Dice3, mean_Dice = self.compute_metric(output, mask, self.Dice)
         # HD1, HD2, HD3, mean_HD = self.compute_metric(output, mask, self.HD95)
 
         # Log losses to WandB
         self.log("seg_loss_val", segmentation_loss, on_step=False, on_epoch=True, sync_dist=True)
-        self.log("classif_loss_val", classifier_loss, on_step=False, on_epoch=True, sync_dist=True)
         self.log("backprop_loss_val", loss, on_step=False, on_epoch=True, sync_dist=True)
         self.log('epoch_loss_val', loss, on_step=False, on_epoch=True, sync_dist=True) # Logs mean loss per epoch
 
@@ -255,74 +249,10 @@ class LitUNet(L.LightningModule):
         # print('HD1', HD1)
 
 
-        if true_classification.nelement() == 1:
-            cluster_id = true_classification.item()
-            self.seg_loss_val_dict.setdefault(cluster_id, []).append(segmentation_loss.detach().cpu())
-            self.class_loss_val_dict.setdefault(cluster_id, []).append(classifier_loss.detach().cpu())
-            self.dice_val_dict.setdefault(cluster_id, []).append(mean_Dice.detach().cpu())
-            # self.hd95_val_dict.setdefault(cluster_id, []).append(mean_HD.detach().cpu())
-
-            self.dice1_val_dict.setdefault(cluster_id, []).append(Dice1.detach().cpu())
-            self.dice2_val_dict.setdefault(cluster_id, []).append(Dice2.detach().cpu())
-            self.dice3_val_dict.setdefault(cluster_id, []).append(Dice3.detach().cpu())
-        #     self.hd1_val_dict.setdefault(cluster_id, []).append(HD1.detach().cpu())
-        #     self.hd2_val_dict.setdefault(cluster_id, []).append(HD2.detach().cpu())
-        #     self.hd3_val_dict.setdefault(cluster_id, []).append(HD3.detach().cpu())
-
-        else:
-            for classification in true_classification:
-                cluster_id = classification.item()
-                self.seg_loss_val_dict.setdefault(cluster_id, []).append(segmentation_loss.detach().cpu())
-                self.class_loss_val_dict.setdefault(cluster_id, []).append(classifier_loss.detach().cpu())
-                self.dice_val_dict.setdefault(cluster_id, []).append(mean_Dice.detach().cpu())
-        #         # self.hd95_val_dict.setdefault(cluster_id, []).append(mean_HD.detach().cpu())
-
-                self.dice1_val_dict.setdefault(cluster_id, []).append(Dice1.detach().cpu())
-                self.dice2_val_dict.setdefault(cluster_id, []).append(Dice2.detach().cpu())
-                self.dice3_val_dict.setdefault(cluster_id, []).append(Dice3.detach().cpu())
-        #         self.hd1_val_dict.setdefault(cluster_id, []).append(HD1.detach().cpu())
-        #         self.hd2_val_dict.setdefault(cluster_id, []).append(HD2.detach().cpu())
-        #         self.hd3_val_dict.setdefault(cluster_id, []).append(HD3.detach().cpu())
-
-
     def on_train_epoch_end(self):
-        # assert set(self.seg_loss_val_dict.keys()) == set(self.class_loss_val_dict.keys()), "Clusters in seg loss and class loss dictionaries are different."
-        # for clusterID in self.seg_loss_val_dict.keys():
-        #     self.log(f'cluster{clusterID}_seg_loss_val', np.mean(self.seg_loss_val_dict[clusterID]), sync_dist = True)
-        #     self.log(f'cluster{clusterID}_classif_loss_val', np.mean(self.class_loss_val_dict[clusterID]), sync_dist = True)
-
-        #     # Dice metrics
-        #     self.log(f'cluster{clusterID}_Dice1_val', np.mean(self.dice1_val_dict[clusterID]), sync_dist=True)
-        #     self.log(f'cluster{clusterID}_Dice2_val', np.mean(self.dice2_val_dict[clusterID]), sync_dist=True)
-        #     self.log(f'cluster{clusterID}_Dice3_val', np.mean(self.dice3_val_dict[clusterID]), sync_dist=True)
-
-        #     # HD metrics
-        #     self.log(f'cluster{clusterID}_HD1_val', np.mean(self.hd1_val_dict[clusterID]), sync_dist=True)
-        #     self.log(f'cluster{clusterID}_HD2_val', np.mean(self.hd2_val_dict[clusterID]), sync_dist=True)
-        #     self.log(f'cluster{clusterID}_HD3_val', np.mean(self.hd3_val_dict[clusterID]), sync_dist=True)
-
-
-
-        # assert set(self.seg_loss_train_dict.keys()) == set(self.class_loss_train_dict.keys()), "Clusters in seg loss and class loss dictionaries are different."
-        # for clusterID in self.seg_loss_train_dict.keys():
-        #     self.log(f'cluster{clusterID}_seg_loss_train', np.mean(self.seg_loss_train_dict[clusterID]), sync_dist = True)
-        #     self.log(f'cluster{clusterID}_classif_loss_train', np.mean(self.class_loss_train_dict[clusterID]), sync_dist = True)
-
-        #     # Dice metrics
-        #     self.log(f'cluster{clusterID}_Dice1_train', np.mean(self.dice1_train_dict[clusterID]), sync_dist=True)
-        #     self.log(f'cluster{clusterID}_Dice2_train', np.mean(self.dice2_train_dict[clusterID]), sync_dist=True)
-        #     self.log(f'cluster{clusterID}_Dice3_train', np.mean(self.dice3_train_dict[clusterID]), sync_dist=True)
-
-        #     # HD metrics
-        #     self.log(f'cluster{clusterID}_HD1_train', np.mean(self.hd1_train_dict[clusterID]), sync_dist=True)
-        #     self.log(f'cluster{clusterID}_HD2_train', np.mean(self.hd2_train_dict[clusterID]), sync_dist=True)
-        #     self.log(f'cluster{clusterID}_HD3_train', np.mean(self.hd3_train_dict[clusterID]), sync_dist=True)
-
         # Reset after every epoch
         self.seg_loss_train_dict = {}
-        self.class_loss_train_dict = {}
         self.seg_loss_val_dict = {}
-        self.class_loss_val_dict = {}
              
     
     def configure_optimizers(self):
@@ -341,7 +271,7 @@ class LitUNet(L.LightningModule):
 
 
 # Lightning Data Module    
-class DANNDataModule(L.LightningDataModule):
+class UNetDataModule(L.LightningDataModule):
     def __init__(self, data_dir: str = "path/to/dir", batch_size: int = 1, test_data_dir: str = "path/to/dir", folds_dir: str = "path/to/dir", fold_no: int = 0, cluster_mapping: dict = {}):
         super().__init__()
         self.data_dir = data_dir # because data_dir is currently setup as list, and i only want the first item

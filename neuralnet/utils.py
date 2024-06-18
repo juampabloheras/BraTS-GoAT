@@ -17,6 +17,7 @@ from sklearn.preprocessing import LabelEncoder
 
 from losses import losses as lf2 # in same directory
 from scipy.spatial.distance import cdist
+# import surface_distance
 
 
 # from models import model_GAN_segmentation
@@ -33,11 +34,12 @@ LOSS_STR_TO_FUNC = {
 }
 
 MODEL_STR_TO_FUNC = {
-        'autoencoder-with-classifier': model.DANNEncoderDecoder3D,
-        'unet-DANN': model.DANNUNet3D,
-        'extended-latent-unet-DANN': model.DANNUNet3DExtendedLatent 
+        'unet3d': model.UNet3D,
+} 
 
-} # ***  All models here have output: [segmentation, classification, latent]  ***
+# MODEL_STR_TO_FUNC = {
+
+# }
 
 
 def split_seg_labels(seg):
@@ -369,49 +371,6 @@ def val(val_loader, model, train_on_overlap, eval_on_overlap, criterions, weight
     
     return mean_loss, mean_ssim, mean_D, mean_D1, mean_D2, mean_D3, mean_hd, hd1, hd2, hd3
 
-
-class Dice(nn.Module):
-    def __init__(self, threshold=0.5, tol=1e-12):
-        super(Dice, self).__init__()
-        self.threshold = threshold
-        self.tol = tol
-
-    def forward(self, y_pred, y_true):
-        # Ensure the predictions and targets are binary
-        y_pred = (y_pred > self.threshold).float()
-        y_true = (y_true > self.threshold).float()
-        
-        # Compute the numerator and the denominator of the Dice coefficient
-        intersection = torch.sum(y_pred * y_true)
-        total = torch.sum(y_pred) + torch.sum(y_true)
-        
-        # Calculate Dice coefficient and return it
-        dice = (2. * intersection + self.tol) / (total + self.tol)
-        return dice
-
-class HD95(nn.Module):
-    def __init__(self, threshold=0.5):
-        super(HD95, self).__init__()
-        self.threshold = threshold
-
-    def forward(self, y_pred, y_true):
-        y_pred = (y_pred > self.threshold).float()
-        y_true = (y_true > self.threshold).float()
-
-        pred_points = torch.nonzero(y_pred, as_tuple=False).cpu().numpy()
-        true_points = torch.nonzero(y_true, as_tuple=False).cpu().numpy()
-
-        if pred_points.size == 0 or true_points.size == 0:
-            # return float('inf')
-            return float('NaN')
-
-        distances = cdist(pred_points, true_points)
-
-        hd_forward = np.percentile(np.min(distances, axis=1), 95)
-        hd_backward = np.percentile(np.min(distances, axis=0), 95)
-
-        hd95_value = max(hd_forward, hd_backward)
-        return torch.tensor(hd95_value, device=y_pred.device)
 
 
 # class HD95(nn.Module):

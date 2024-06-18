@@ -53,12 +53,11 @@ for FOLD_NO in $(seq 0 $(($NUM_FOLDS - 1))); do
     # Create the output and train_files directories
     mkdir -p "$TRAIN_FILES_DIR"
 
-    # Copy train files to the train_files directory for bookkeeping of tests
-    cp train_GoAT.py utils.py model.py train_cv_parallel.slurm "$TRAIN_FILES_DIR" 
+    # Copy train files to the train_files directory for bookkeeping of tests    
+    cp train_GoAT.py utils.py model.py train_cv_parallel.slurm "$0" "$TRAIN_FILES_DIR"  # $0 represents the current script
 
 
     # Track settings information in text file
-
     settings_info="Train Directory: ${TRAIN_DIR[@]}
     Test Directory: ${TEST_DIR[@]}
     Checkpoint Directory: $CKPT_DIR
