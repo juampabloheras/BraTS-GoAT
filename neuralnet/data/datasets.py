@@ -177,29 +177,70 @@ class LoadDatasets(Dataset):
         self.transforms = transforms
         self.normalized = normalized
         self.gt_provided = gt_provided
-        if partial_file_names != True:
-            self.paths = self._get_matching_files(data_path, partial_file_names)
+        if partial_file_names == False:
+            self.paths =  [os.path.join(data_path, filename) for filename in os.listdir(data_path) if filename.endswith('.pkl')]
         else:
-            self.paths = data_path
+            self.paths = self._get_matching_files(data_path, partial_file_names)
+
+        # self.transforms = transforms
+        # self.normalized = normalized
+        # self.gt_provided = gt_provided
+        # if partial_file_names != True:
+        #     self.paths = self._get_matching_files(data_path, partial_file_names)
+        # else:
+        #     self.paths = data_path
+
+    # def _get_matching_files(self, data_path, partial_file_names):
+    #     matching_files = []
+    #     print("Length of partial names: ", len(partial_file_names))
+    #     self.count = 0
+
+    #     file_path = data_path
+
+    #     if isinstance(data_path,str):
+    #         data_path = os.listdir(data_path)
+    #     if not isinstance(data_path, (list, tuple)):
+    #         data_path = [data_path]
+        
+    #     # print('data_path', data_path)
+    #     for filename in data_path:
+    #         if any (partial_name in filename for partial_name in partial_file_names) and filename not in matching_files:
+    #             matching_files.append(file_path + '/' + filename) 
+    #             self.count += 1
+    #     print(self.count)
+    #     return matching_files
+
 
     def _get_matching_files(self, data_path, partial_file_names):
         matching_files = []
-        print("Length of partial names: ", len(partial_file_names))
+        # print("length of partial names", len(partial_file_names))
         self.count = 0
 
         file_path = data_path
 
-        if isinstance(data_path,str):
+        ############ THIS NEEDS TO BE IMPROVED ##############
+        ### code uses this case
+        temp = []
+        if isinstance(data_path,list):
+            file_path = data_path[0] ##### 
+            for path in data_path:
+                temp += os.listdir(path)
+            data_path = temp
+
+        if isinstance(data_path,str): # FOR make2dMRI.py
             data_path = os.listdir(data_path)
+
         if not isinstance(data_path, (list, tuple)):
             data_path = [data_path]
+
+        ########################################################
         
         # print('data_path', data_path)
         for filename in data_path:
             if any (partial_name in filename for partial_name in partial_file_names) and filename not in matching_files:
                 matching_files.append(file_path + '/' + filename) 
                 self.count += 1
-        print(self.count)
+
         return matching_files
 
     def one_hot(self, img, C):
@@ -243,9 +284,9 @@ class LoadDatasets(Dataset):
         if self.gt_provided:
             y1 = torch.from_numpy(y1)
 
-        # Get case_id from filename - ADDED by Ethan 17 July 2023
+        # Get case_id from filename
         filename = path.split('/')[-1]
-        case_info = tuple(filename.split('.')[0].split('-')[2:4]) #(case_id, timepoint)
+        case_info = str(filename.split('.')[0]) # e.g. from BraTS-GoAT-00000.pkl will produce 'BraTS-GoAT-00000'
 
         if self.gt_provided:
             data = x1, x2, x3, x4, y1

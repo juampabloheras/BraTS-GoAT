@@ -33,7 +33,7 @@ def parse_args():
     parser.add_argument('--partial_file_names_dir', type=str, nargs='+', required=True)
     parser.add_argument('--folds_dir', type=str)
     parser.add_argument('--fold_no', type=int)
-    parser.add_argument('--cluster_dict', type=str)
+    parser.add_argument('--cluster_dict', type=str, required=False)
     parser.add_argument('--run_identifier', type=str)
 
     # Optional arguments

@@ -7,8 +7,8 @@
 #SBATCH --mem=10G
 #SBATCH --ntasks=1
 #SBATCH --time=00:10:00
-#SBATCH --output=/gscratch/kurtlab/juampablo/BraTS-GoAT/TESTS/test0601_dec/output_train.txt
-#SBATCH --error=/gscratch/kurtlab/juampablo/BraTS-GoAT/TESTS/test0601_dec/error_train.txt
+#SBATCH --output=/gscratch/kurtlab/juampablo/BraTS-GoAT/TESTS/test0617_dec_k_3_weighted10/output_train.txt
+#SBATCH --error=/gscratch/kurtlab/juampablo/BraTS-GoAT/TESTS/test0617_dec_k_3_weighted10/error_train.txt
 #SBATCH --chdir=/gscratch/kurtlab/juampablo/BraTS-GoAT/neuralnet
 
 
@@ -20,14 +20,15 @@ NUM_FOLDS=5
 TRAIN_DIR='/gscratch/scrubbed/juampablo/BraTS-GoAT/DATA/training'
 TEST_DIR='/gscratch/scrubbed/juampablo/BraTS-GoAT/DATA/validation'
 CKPT_DIR='None'
-BASE_OUT_DIR='/gscratch/kurtlab/juampablo/BraTS-GoAT/TESTS/test0601_dec/out_dir'
+BASE_OUT_DIR='/gscratch/kurtlab/juampablo/BraTS-GoAT/TESTS/test0617_dec_k_3_weighted10/out_dir'
 FOLDS_DIR='/gscratch/kurtlab/juampablo/BraTS-GoAT/neuralnet/CVFolds/cv-5-tianyi'
 
 
 # Training parameters
 LOSS=('mse' 'cross-entropy')
 WEIGHTS=(1 0.07177350190342198)
-LOSS_WEIGHTS=(1 0.02)
+# LOSS_WEIGHTS=(1 0.02)
+LOSS_WEIGHTS=(1 0.0)
 TRAIN_ON_OVERLAP='--no-train_overlap'
 EVAL_ON_OVERLAP='--no-eval_on_overlap'
 
@@ -40,8 +41,8 @@ PARTIAL_FILE_NAMES_DIR=('All')
 
 # Used to index runs
 # RUN_IDENTIFIER="newrun-$(($RANDOM%1000 * $RANDOM + $RANDOM))"
-RUN_IDENTIFIER="dec_run0601"
-CLUSTER_DICT='/mmfs1/gscratch/kurtlab/juampablo/BraTS-GoAT/neuralnet/cluster_dicts/dec_cluster.pkl'
+RUN_IDENTIFIER="dec_k_3_weighted10_run0617"
+CLUSTER_DICT='/mmfs1/gscratch/kurtlab/juampablo/BraTS-GoAT/neuralnet/cluster_dicts/dec_k_3_clusters.pkl'
 
 
 # Cross-validation training
@@ -90,7 +91,7 @@ for FOLD_NO in $(seq 0 $(($NUM_FOLDS - 1))); do
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=12
 #SBATCH --mem=220G
-#SBATCH --time=6:00:00
+#SBATCH --time=8:00:00
 #SBATCH --chdir=/mmfs1/gscratch/kurtlab/juampablo/BraTS-GoAT/neuralnet
 #SBATCH --export=all
 #SBATCH --output=${OUT_DIR}/output_train_fold_${FOLD_NO}.txt

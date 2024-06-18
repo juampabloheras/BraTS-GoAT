@@ -33,7 +33,7 @@ torch.set_float32_matmul_precision('medium')
 
 
 # Lightning Module 
-class LitGoAT(L.LightningModule):
+class LitUNet(L.LightningModule):
     def __init__(self, model, alpha, init_lr, train_on_overlap, eval_on_overlap, loss_functions, loss_weights, weights, power, max_epochs):
         super().__init__()
         self.model  = model 
@@ -131,13 +131,12 @@ class LitGoAT(L.LightningModule):
         x_in = torch.cat((x1, x2, x3, x4), dim=1)
 
 
-        output, pred_classification, latent = self.model(x_in, self.alpha) # equivalent to self.model(x_in, self.alpha) and self.forward(x_in)
+        output = self.model(x_in, self.alpha) # equivalent to self.model(x_in, self.alpha) and self.forward(x_in)
         output = output.float()
 
         segmentation_loss = self.compute_loss(output, mask, self.loss_functions, self.weights)
-        classifier_loss = self.domain_criterion(pred_classification, true_classification)
 
-        loss = self.loss_weights[0]*segmentation_loss + self.loss_weights[1]*classifier_loss
+        loss = segmentation_loss
 
         Dice1, Dice2, Dice3, mean_Dice = self.compute_metric(output, mask, self.Dice)
         # HD1, HD2, HD3, mean_HD = self.compute_metric(output, mask, self.HD95)
@@ -342,7 +341,7 @@ class LitGoAT(L.LightningModule):
 
 
 # Lightning Data Module    
-class BraTSDataModule(L.LightningDataModule):
+class DANNDataModule(L.LightningDataModule):
     def __init__(self, data_dir: str = "path/to/dir", batch_size: int = 1, test_data_dir: str = "path/to/dir", folds_dir: str = "path/to/dir", fold_no: int = 0, cluster_mapping: dict = {}):
         super().__init__()
         self.data_dir = data_dir # because data_dir is currently setup as list, and i only want the first item
@@ -390,7 +389,10 @@ class BraTSDataModule(L.LightningDataModule):
                         if file_name not in val_file_names
             ]         
         return train_file_names, val_file_names
-    
+   
+
+
+
 
 
 if __name__ == '__main__':
@@ -468,4 +470,3 @@ if __name__ == '__main__':
         trainer.fit(model, datamodule=dm)
 
     trainer.validate(datamodule=dm)
-
