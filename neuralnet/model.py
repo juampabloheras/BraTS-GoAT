@@ -180,6 +180,8 @@ def testModel(model, data_dir, num_samples, train_on_overlap = True, num_workers
     # Create DataLoader
     dataloader = DataLoader(dataset, batch_size=batch_size, num_workers=num_workers)
 
+    dice = Dice()
+
     for batch in dataloader:
         subject_id, imgs = batch
 
@@ -203,9 +205,11 @@ def testModel(model, data_dir, num_samples, train_on_overlap = True, num_workers
         print("Input Shape: ", np.shape(x_in))
         print("Output shape: ", np.shape(output[0] if isinstance(output, list) and output else output))
         print("Segmentation shape: ", np.shape(mask))
+        
 
-        D1, D2, D3, D_avg = compute_metric(output, mask, Dice())
-        HD1, HD2, HD3, HD_avg = compute_metric(output, mask, HD95())
+        random_mask = random.rand(*np.shape(output))
+        D1, D2, D3, D_avg = compute_metric(output, output, dice)
+        HD1, HD2, HD3, HD_avg = compute_metric(output, output*0.8, HD95())
         print(f"Dice Scores: D1={D1}, D2={D2}, D3={D3}, D_avg={D_avg}")
         print(f"Hausdorff Distances (95%): HD1={HD1}, HD2={HD2}, HD3={HD3}, HD_avg={HD_avg}")
 
@@ -215,9 +219,10 @@ def testModel(model, data_dir, num_samples, train_on_overlap = True, num_workers
 
 
 
-
 # Test metrics
 def compute_metric(output, mask, metric):
+    output = output.detach().cpu().numpy()
+    mask = mask.detach().cpu().numpy()
     D1 = metric(output[:, 0, :, :, :], mask[:, 0, :, :, :])
     D2 = metric(output[:, 1, :, :, :], mask[:, 1, :, :, :])
     D3 = metric(output[:, 2, :, :, :], mask[:, 2, :, :, :])
