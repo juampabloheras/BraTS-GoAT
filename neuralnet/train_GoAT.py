@@ -79,7 +79,7 @@ class LitGoAT(L.LightningModule):
 
 
     # @staticmethod
-    def compute_loss(self, output, mask, loss_functs, loss_weights):
+    def compute_loss(self, output, mask, loss_functs, weights):
         """Computes weighted loss between model output and ground truth, summed across each region."""
         loss = 0.
         for n, loss_function in enumerate(loss_functs):      
@@ -87,7 +87,7 @@ class LitGoAT(L.LightningModule):
             for i in range(3):
                 temp += loss_function(output[:,i:i+1], mask[:,i:i+1])
 
-            loss += temp * loss_weights[n]
+            loss += temp * weights[n]
         return loss
 
     # @staticmethod
