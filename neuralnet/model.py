@@ -6,17 +6,14 @@ from torch.autograd import Function
 
 # Imports to test models
 from torch.utils.data import DataLoader
-from data.datasets import LoadDatasetswClusterID, LoadDatasets
+from data.datasets import LoadDatasets
 from utils import *
 import random
 from torchvision import transforms
 from data import trans
+import time
 
 from metrics import Dice, HD95
-
-import surface_distance
-
-
 
 # Component blocks
 class conv_block(nn.Module):
@@ -157,12 +154,12 @@ class UNet3D(nn.Module):
 def testModel(model, data_dir, num_samples, train_on_overlap = True, num_workers = 3):
     
     '''
-    Code to debug models.
+    Code to debug models and metrics.
     '''
     
     # Configuration settings
     data_dir = data_dir
-    batch_size = 1
+    batch_size = 3
 
     num_workers = num_workers
     data_transforms = transforms.Compose([trans.CenterCropBySize([128,192,128]), 
@@ -203,16 +200,18 @@ def testModel(model, data_dir, num_samples, train_on_overlap = True, num_workers
         # Print outputs for verification
         print('Subject ID: ', subject_id)
         print("Input Shape: ", np.shape(x_in))
-        print("Output shape: ", np.shape(output[0] if isinstance(output, list) and output else output))
+        print("Output shape: ", np.shape(output if isinstance(output, list) and output else output))
         print("Segmentation shape: ", np.shape(mask))
         
 
-        random_mask = random.rand(*np.shape(output))
-        D1, D2, D3, D_avg = compute_metric(output, output, dice)
-        HD1, HD2, HD3, HD_avg = compute_metric(output, output*0.8, HD95())
-        print(f"Dice Scores: D1={D1}, D2={D2}, D3={D3}, D_avg={D_avg}")
-        print(f"Hausdorff Distances (95%): HD1={HD1}, HD2={HD2}, HD3={HD3}, HD_avg={HD_avg}")
 
+        D1, D2, D3, D_avg = compute_metric(output, output, dice)
+        print(f"Dice Scores: D1={D1}, D2={D2}, D3={D3}, D_avg={D_avg}")
+        start = time.time()
+        HD1, HD2, HD3, HD_avg = compute_metric(output, output, HD95())
+        print(np.shape(HD1))
+        print(f"Hausdorff Distances (95%): HD1={HD1}, HD2={HD2}, HD3={HD3}, HD_avg={HD_avg}")
+        print(f'HD duration: {time.time() - start} s')
     return
 
 
@@ -221,13 +220,13 @@ def testModel(model, data_dir, num_samples, train_on_overlap = True, num_workers
 
 # Test metrics
 def compute_metric(output, mask, metric):
-    output = output.detach().cpu().numpy()
-    mask = mask.detach().cpu().numpy()
+    # output = output.detach().cpu().numpy()
+    # mask = mask.detach().cpu().numpy()
     D1 = metric(output[:, 0, :, :, :], mask[:, 0, :, :, :])
     D2 = metric(output[:, 1, :, :, :], mask[:, 1, :, :, :])
     D3 = metric(output[:, 2, :, :, :], mask[:, 2, :, :, :])
     D_list = [D1, D2, D3]
-    D_list = [D for D in D_list if D is not  float('NaN')]
+    D_list = [D for D in D_list if D is not float('NaN')]
     D_avg = sum(D_list) / len(D_list) if D_list else float('NaN')
     return D1, D2, D3, D_avg
 

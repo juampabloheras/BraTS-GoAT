@@ -1,22 +1,27 @@
+# General packages
 import argparse
-import torch
+import pickle
+import os
+import random
+import numpy as np
+
+
+# Import our modules
+from train_utils import *
 from utils import *
 from data import trans
-from data.datasets import LoadDatasetswClusterID
+from data.datasets import LoadDatasets
+from metrics import Dice, HD95
 
+# PyTorch Imports
+import torch
 from torchvision import transforms
-from train_utils import *
 from torch.utils.data import DataLoader
-
-import pickle
-
-import os
 from torch import optim, nn, utils, Tensor
 from torchvision.transforms import ToTensor
-import lightning as L
-from lightning.pytorch.cli import LightningCLI
 
-# Trainer Imports
+# Pytorch Lightning, Trainer Imports
+import lightning as L
 from lightning.pytorch import Trainer, seed_everything
 from lightning.pytorch.callbacks import ModelCheckpoint
 from lightning.pytorch.callbacks import LearningRateMonitor
@@ -25,59 +30,27 @@ from lightning.pytorch.callbacks import TQDMProgressBar
 
 # Weights and Biases logger
 from lightning.pytorch.loggers import WandbLogger
-import random
 
-# To "properly utilize tensor cores"
+# To "properly utilize" tensor cores
 torch.set_float32_matmul_precision('medium')
 
-
-
-# Lightning Module 
+# Define Lightning Training Module 
 class LitUNet(L.LightningModule):
-    def __init__(self, model, alpha, init_lr, train_on_overlap, eval_on_overlap, loss_functions, loss_weights, weights, power, max_epochs):
+    def __init__(self, model, init_lr, train_on_overlap, eval_on_overlap, loss_functions, weights, power, max_epochs):
         super().__init__()
         self.model  = model 
         self.init_lr = init_lr
         self.train_on_overlap = train_on_overlap
         self.eval_on_overlap = eval_on_overlap
         self.loss_functions = loss_functions
-        self.loss_weights = loss_weights
-        self.alpha = alpha
         self.weights = weights
         self.power = power
         self.max_epochs = max_epochs
         self.save_hyperparameters()
-        self.Dice = Dice() # from utils
-        self.HD95 = HD95() # from utils
-
-        # Initialize dicts for logging
-        self.seg_loss_train_dict = {}
-        self.class_loss_train_dict = {}
-        self.seg_loss_val_dict = {}
-        self.class_loss_val_dict = {}
-
-        self.dice_train_dict = {}
-        self.hd95_train_dict = {}
-        self.dice_val_dict = {}
-        self.hd95_val_dict = {}
-
-        self.dice1_val_dict = {}
-        self.dice2_val_dict = {}
-        self.dice3_val_dict = {}
-        self.hd1_val_dict = {}
-        self.hd2_val_dict = {}
-        self.hd3_val_dict = {}
-
-        # Training metrics dictionaries
-        self.dice1_train_dict = {}
-        self.dice2_train_dict = {}
-        self.dice3_train_dict = {}
-        self.hd1_train_dict = {}
-        self.hd2_train_dict = {}
-        self.hd3_train_dict = {}
+        self.Dice = Dice() 
+        self.HD95 = HD95() 
 
 
-    # @staticmethod
     def compute_loss(self, output, mask, loss_functs, loss_weights):
         """Computes weighted loss between model output and ground truth, summed across each region."""
         loss = 0.
@@ -89,7 +62,6 @@ class LitUNet(L.LightningModule):
             loss += temp * loss_weights[n]
         return loss
 
-    # @staticmethod
     def compute_metric(self, output, mask, metric):
         D1 = metric(output[:, 0, :, :, :], mask[:, 0, :, :, :])
         D2 = metric(output[:, 1, :, :, :], mask[:, 1, :, :, :])
@@ -99,22 +71,23 @@ class LitUNet(L.LightningModule):
         D_avg = sum(D_list) / len(D_list) if D_list else float('NaN')
         return D1, D2, D3, D_avg
 
+
     def training_step(self, batch, batch_idx): 
         
-        # Set capturable = True to circumvent error
+        # Set capturable = True to avoid error in outdated PyTorch
         optimizer = self.optimizers()
         optimizer.param_groups[0]['capturable'] = True
 
-        subject_id, imgs, true_classification = batch
+        # Unpack batch data
+        subject_id, imgs = batch
 
-        # Unpack the data
         x1 = imgs[0]
         x2 = imgs[1]
         x3 = imgs[2]
         x4 = imgs[3]
         seg = imgs[4]
 
-        seg3 = split_seg_labels(seg).to(self.device)
+        seg3 = split_seg_labels(seg).to(self.device) # self.device is defined by PyTorch lightning during execution
 
         # Set the target either as overlapping or disjoint regions
         if self.train_on_overlap:
@@ -130,17 +103,18 @@ class LitUNet(L.LightningModule):
         x_in = torch.cat((x1, x2, x3, x4), dim=1)
 
 
-        output = self.model(x_in, self.alpha) # equivalent to self.model(x_in, self.alpha) and self.forward(x_in)
+        output = self.model(x_in) 
         output = output.float()
 
         segmentation_loss = self.compute_loss(output, mask, self.loss_functions, self.weights)
 
-        loss = segmentation_loss
+        loss = segmentation_loss # Loss used for backpropagation
 
+        # Compute dice and HD95 scores
         Dice1, Dice2, Dice3, mean_Dice = self.compute_metric(output, mask, self.Dice)
         # HD1, HD2, HD3, mean_HD = self.compute_metric(output, mask, self.HD95)
 
-        # Log losses to TensorBoard (changing to WandB soon..)
+        # Log losses to WandB
         self.log("seg_loss", segmentation_loss, on_step=False, on_epoch=True, sync_dist=True)
         self.log("backprop_loss", loss, on_step=False, on_epoch=True, sync_dist=True)
 
@@ -154,37 +128,6 @@ class LitUNet(L.LightningModule):
         # self.log("HD3", HD3, on_step=False, on_epoch=True, sync_dist=True)
         # self.log("mean_HD", mean_HD, on_step=False, on_epoch=True, sync_dist=True) 
  
-        # print('type dice1', type(Dice1))
-        # print(Dice1)
-
-
-        if true_classification.nelement() == 1:
-            cluster_id = true_classification.item()
-            self.seg_loss_train_dict.setdefault(cluster_id, []).append(segmentation_loss.detach().cpu())
-            self.dice_train_dict.setdefault(cluster_id, []).append(mean_Dice.detach().cpu())
-        #     # self.hd95_train_dict.setdefault(cluster_id, []).append(mean_HD.detach().cpu())
-
-
-            self.dice1_train_dict.setdefault(cluster_id, []).append(Dice1.detach().cpu())
-            self.dice2_train_dict.setdefault(cluster_id, []).append(Dice2.detach().cpu())
-            self.dice3_train_dict.setdefault(cluster_id, []).append(Dice3.detach().cpu())
-            # self.hd1_train_dict.setdefault(cluster_id, []).append(HD1.detach().cpu())
-            # self.hd2_train_dict.setdefault(cluster_id, []).append(HD2.detach().cpu())
-            # self.hd3_train_dict.setdefault(cluster_id, []).append(HD3.detach().cpu())
-        else:
-            for classification in true_classification:
-                cluster_id = classification.item()
-                self.seg_loss_train_dict.setdefault(cluster_id, []).append(segmentation_loss.detach().cpu())
-                self.dice_train_dict.setdefault(cluster_id, []).append(mean_Dice.detach().cpu())
-        #         # self.hd95_train_dict.setdefault(cluster_id, []).append(mean_HD.detach().cpu())
-
-                self.dice1_train_dict.setdefault(cluster_id, []).append(Dice1.detach().cpu())
-                self.dice2_train_dict.setdefault(cluster_id, []).append(Dice2.detach().cpu())
-                self.dice3_train_dict.setdefault(cluster_id, []).append(Dice3.detach().cpu())
-        #         self.hd1_train_dict.setdefault(cluster_id, []).append(HD1.detach().cpu())
-        #         self.hd2_train_dict.setdefault(cluster_id, []).append(HD2.detach().cpu())
-        #         self.hd3_train_dict.setdefault(cluster_id, []).append(HD3.detach().cpu())
-
         return loss
     
     def validation_step(self, batch, batch_idx):
@@ -214,46 +157,35 @@ class LitUNet(L.LightningModule):
 
         x_in = torch.cat((x1, x2, x3, x4), dim=1)
 
-        output = self.model(x_in, self.alpha) # equivalent to self.model(x_in, self.alpha) and self.forward(x_in)
+        output = self.model(x_in)
         output = output.float()
-
-        # print('Output shape: ', np.shape(output))
-        # print('Mask shape: ', np.shape(mask))
 
         segmentation_loss = self.compute_loss(output, mask, self.loss_functions, self.weights)
 
         loss = segmentation_loss 
 
+        # Compute dice and HD95 scores
         Dice1, Dice2, Dice3, mean_Dice = self.compute_metric(output, mask, self.Dice)
-        # HD1, HD2, HD3, mean_HD = self.compute_metric(output, mask, self.HD95)
+        HD1, HD2, HD3, mean_HD = self.compute_metric(output, mask, self.HD95)
 
         # Log losses to WandB
         self.log("seg_loss_val", segmentation_loss, on_step=False, on_epoch=True, sync_dist=True)
         self.log("backprop_loss_val", loss, on_step=False, on_epoch=True, sync_dist=True)
         self.log('epoch_loss_val', loss, on_step=False, on_epoch=True, sync_dist=True) # Logs mean loss per epoch
 
-
         self.log("Dice1_val", Dice1, on_step=False, on_epoch=True, sync_dist=True)
         self.log("Dice2_val", Dice2, on_step=False, on_epoch=True, sync_dist=True)
         self.log("Dice3_val", Dice3, on_step=False, on_epoch=True, sync_dist=True)
         self.log("mean_Dice_val", mean_Dice, on_step=False, on_epoch=True, sync_dist=True) 
 
-        # self.log("HD1_val", HD1, on_step=False, on_epoch=True, sync_dist=True)
-        # self.log("HD2_val", HD2, on_step=False, on_epoch=True, sync_dist=True)
-        # self.log("HD3_val", HD3, on_step=False, on_epoch=True, sync_dist=True)
-        # self.log("mean_HD_val", mean_HD, on_step=False, on_epoch=True, sync_dist=True) 
+        self.log("HD1_val", HD1, on_step=False, on_epoch=True, sync_dist=True)
+        self.log("HD2_val", HD2, on_step=False, on_epoch=True, sync_dist=True)
+        self.log("HD3_val", HD3, on_step=False, on_epoch=True, sync_dist=True)
+        self.log("mean_HD_val", mean_HD, on_step=False, on_epoch=True, sync_dist=True) 
 
-        # print('type dice1', type(Dice1))
-        # print('Dice1', Dice1)
-        # print('type hd1', type(HD1))
-        # print('HD1', HD1)
-
-
-    def on_train_epoch_end(self):
-        # Reset after every epoch
-        self.seg_loss_train_dict = {}
-        self.seg_loss_val_dict = {}
-             
+    def lr_lambda(self, current_epoch):
+        """Custom learning rate scheduler."""
+        return np.power(1 - (current_epoch / self.max_epochs), self.power)
     
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.model.parameters(), lr=self.init_lr, weight_decay = 0, amsgrad= True)
@@ -265,21 +197,17 @@ class LitUNet(L.LightningModule):
         }
         return [optimizer], [lr_scheduler_config]
 
-    def lr_lambda(self, current_epoch):
-        """Custom learning rate scheduler."""
-        return np.power(1 - (current_epoch / self.max_epochs), self.power)
 
 
-# Lightning Data Module    
+# Define Lightning Data Module    
 class UNetDataModule(L.LightningDataModule):
-    def __init__(self, data_dir: str = "path/to/dir", batch_size: int = 1, test_data_dir: str = "path/to/dir", folds_dir: str = "path/to/dir", fold_no: int = 0, cluster_mapping: dict = {}):
+    def __init__(self, data_dir: str = "path/to/dir", batch_size: int = 1, test_data_dir: str = "path/to/dir", folds_dir: str = "path/to/dir", fold_no: int = 0):
         super().__init__()
         self.data_dir = data_dir # because data_dir is currently setup as list, and i only want the first item
         self.test_data_dir = test_data_dir
         self.batch_size = batch_size
         self.folds_dir = folds_dir
         self.fold_no = fold_no
-        self.cluster_mapping = cluster_mapping
         self.transforms = transforms.Compose([trans.CenterCropBySize([128,192,128]), 
                                               trans.NumpyType((np.float32, np.float32,np.float32, np.float32,np.float32)),
                                               ])
@@ -288,11 +216,11 @@ class UNetDataModule(L.LightningDataModule):
     def setup(self, stage: str):
         train_file_names, val_file_names = self.load_file_names(self.data_dir, self.folds_dir, self.fold_no)        
         if stage == 'fit':
-            self.brats_train = LoadDatasetswClusterID(self.data_dir, self.transforms, self.cluster_mapping,  normalized=True, gt_provided=True, partial_file_names = train_file_names)
-            self.brats_val = LoadDatasetswClusterID(self.data_dir, self.transforms, self.cluster_mapping,  normalized=True, gt_provided=True, partial_file_names = val_file_names)
+            self.brats_train = LoadDatasets(self.data_dir, self.transforms, normalized=True, gt_provided=True, partial_file_names = train_file_names)
+            self.brats_val = LoadDatasets(self.data_dir, self.transforms, normalized=True, gt_provided=True, partial_file_names = val_file_names)
 
         if stage == 'test':
-            self.brats_test = LoadDatasetswClusterID(self.test_data_dir, self.transforms, self.cluster_mapping,  normalized=True, gt_provided= False, partial_file_names = False)
+            self.brats_test = LoadDatasets(self.test_data_dir, self.transforms, normalized=True, gt_provided= False, partial_file_names = False)
 
     def train_dataloader(self):
         print(f'Length of train dataset: {len(self.brats_train)}')
@@ -327,34 +255,32 @@ class UNetDataModule(L.LightningDataModule):
 
 if __name__ == '__main__':
 
-    (alpha, train_dir, test_dir, ckpt_dir, out_dir, loss_str, weights, loss_weights, 
-            model_str, partial_file_names, folds_dir, fold_no, cluster_dict, run_identifier, max_epochs, 
-                                lr, power, eval_on_overlap, train_on_overlap) = parse_args() #definition in train_utils
+    (train_dir, test_dir, ckpt_dir, out_dir, loss_str, weights, 
+                model_str, folds_dir, fold_no, run_identifier, max_epochs, lr,
+                                        power, eval_on_overlap, train_on_overlap) = parse_args() #definition in train_utils
 
-
-    alpha = alpha
-    init_lr = lr
-    train_on_overlap = train_on_overlap
-    eval_on_overlap = eval_on_overlap
-    loss_functions = [LOSS_STR_TO_FUNC[l] for l in loss_str]
-    loss_weights = loss_weights
-    power =  power
-    max_epochs = max_epochs
-    cluster_dict_path = cluster_dict
 
     data_dir = train_dir
-    batch_size = 1  ######
     test_data_dir = test_dir
+    ckpt_dir = ckpt_dir
+    out_dir = out_dir
+    loss_functions = [LOSS_STR_TO_FUNC[l] for l in loss_str] # from utils
+    weights = weights
+    model_str = model_str
     folds_dir = folds_dir
     fold_no = fold_no
+    run_identifier = run_identifier
+    max_epochs = max_epochs
+    init_lr = lr
+    power =  power
+    eval_on_overlap = eval_on_overlap
+    train_on_overlap = train_on_overlap
 
-    # Load cluster mapping
-    with open(cluster_dict_path, 'rb') as file:
-        cluster_mapping = pickle.load(file)
-    num_clusters = len(cluster_mapping)
+    batch_size = 1  ######
+    nf = 8 # model size factor (usually 32 when training full model)
 
-    # Instantiate model with correct number of clusters
-    model_architecture = MODEL_STR_TO_FUNC[model_str](img_ch = 4, output_ch = 3, num_domains = num_clusters)
+    # Instantiate model with correct size, and number of input and output channels
+    model_architecture = MODEL_STR_TO_FUNC[model_str](nf = nf, img_ch = 4, output_ch = 3) # from utils
 
     # Make checkpoint directory
     new_ckpt_dir = os.path.join(out_dir, 'new_checkpoints')
@@ -364,22 +290,26 @@ if __name__ == '__main__':
 
     # Instantiate DataModule
     print(f'Loading Fold {fold_no}')
-    dm = BraTSDataModule(data_dir = data_dir, batch_size = batch_size, test_data_dir = test_data_dir, folds_dir = folds_dir, fold_no = fold_no, cluster_mapping=cluster_mapping)
+    dm = UNetDataModule(data_dir = data_dir, batch_size = batch_size, test_data_dir = test_data_dir, folds_dir = folds_dir, fold_no = fold_no)
     
     # Set seeds
-    seed_everything(42, workers = True) # sets seeds for numpy, torch and python.random.
+    seed_everything(42, workers = True) # sets seeds for numpy, torch and python.random for reproducibility of results.
 
-    # Define callbacks
+    # Define Lightning callbacks (https://lightning.ai/docs/pytorch/stable/extensions/callbacks.html)
     lr_monitor = LearningRateMonitor(logging_interval='epoch')
-    checkpoint_callback = ModelCheckpoint(every_n_epochs = 2, dirpath=new_ckpt_dir, filename='train-GoAT-{epoch:02d}-{seg_loss:.4f}-fold{fold_no:02d}', save_last = True, monitor = 'seg_loss', mode = 'min', save_top_k = 5)  # Note filename is NOT an fstring
+    checkpoint_callback = ModelCheckpoint(every_n_epochs = 2, 
+                                          dirpath=new_ckpt_dir, 
+                                          filename='train-unet-{epoch:02d}-{seg_loss:.4f}-fold{fold_no:02d}', # Note filename is NOT an fstring
+                                            save_last = True, 
+                                            monitor = 'seg_loss', 
+                                            mode = 'min', 
+                                            save_top_k = 5)  
 
     # Define Model
-    model = LitGoAT(model_architecture, alpha, init_lr, train_on_overlap, eval_on_overlap, loss_functions, loss_weights, weights, power, max_epochs)
+    model = LitUNet(model_architecture, init_lr, train_on_overlap, eval_on_overlap, loss_functions, weights, power, max_epochs)
 
     # Define WandB logger
-    # wandb_logger = WandbLogger(project="CSE547 Final Project", name = f"Debugging-GoAT-fold{fold_no}-{run_identifier}")
-
-    wandb_logger = logger_setup(project_name = "CSE547 Final Project Runs", experiment_name = f"GoAT-fold{fold_no}-{run_identifier}", out_dir = out_dir) # in train_utils
+    wandb_logger = logger_setup(project_name = "BraTS Practice Runs Juampablo", experiment_name = f"UNet-fold{fold_no}-{run_identifier}", out_dir = out_dir) # in train_utils
 
     TRAINER_KWARGS = {
     'max_epochs': max_epochs,

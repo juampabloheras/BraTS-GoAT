@@ -21,19 +21,15 @@ def none_or_int(value):
 def parse_args():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--alpha', type=none_or_int, default=None, help="An optional integer argument or 'None'")
     parser.add_argument('--train_dir', type=str, nargs='+', required=True)
     parser.add_argument('--test_dir', type=str, nargs='+', required=True)
     parser.add_argument('--ckpt_dir', type=str, required=True)
     parser.add_argument('--out_dir', type=str, required=True)
     parser.add_argument('--loss', type=str, nargs='+', required=True)
     parser.add_argument('--weights', type=float, nargs='+', required=True)
-    parser.add_argument('--loss_weights', type=float, nargs='+', required=True)
     parser.add_argument('--model', type=str, required=True)
-    parser.add_argument('--partial_file_names_dir', type=str, nargs='+', required=True)
     parser.add_argument('--folds_dir', type=str)
     parser.add_argument('--fold_no', type=int)
-    parser.add_argument('--cluster_dict', type=str, required=False)
     parser.add_argument('--run_identifier', type=str)
 
     # Optional arguments
@@ -56,31 +52,27 @@ def parse_args():
     args = parser.parse_args()
 
     # Get variables
-    alpha = args.alpha
     train_dir = args.train_dir
     test_dir = args.test_dir
     ckpt_dir = args.ckpt_dir
     out_dir = args.out_dir
     loss_str = args.loss
     weights = args.weights
-    loss_weights = args.loss_weights
     model_str = args.model
-    partial_file_names = args.partial_file_names_dir
     folds_dir = args.folds_dir
     fold_no = args.fold_no
-    cluster_dict = args.cluster_dict
     run_identifier = args.run_identifier
 
 
-    max_epoch = args.epochs
+    max_epochs = args.epochs
     lr = args.lr
     power = args.power
 
     eval_on_overlap = args.eval_on_overlap
     train_on_overlap = args.train_on_overlap
 
-    return (alpha, train_dir, test_dir, ckpt_dir, out_dir, loss_str, weights, loss_weights, 
-            model_str, partial_file_names, folds_dir, fold_no, cluster_dict, run_identifier, max_epoch, lr, power, eval_on_overlap, train_on_overlap)
+    return (train_dir, test_dir, ckpt_dir, out_dir, loss_str, weights, 
+            model_str, folds_dir, fold_no, run_identifier, max_epochs, lr, power, eval_on_overlap, train_on_overlap)
 
 
 
