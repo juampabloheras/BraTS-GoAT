@@ -42,5 +42,6 @@ results to try to understand which sets of features improve segmentation.
 
 
 ## Model Architecture
-![547diag](https://github.com/user-attachments/assets/54b4dbd6-5ffb-4af2-8b2c-dc02df7bb485)
+![547diag](https://github.com/user-attachments/assets/20aefd25-48b3-4332-b38d-50ba7fadb050)
+
 
