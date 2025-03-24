@@ -9,6 +9,8 @@ Code for neural network: /neuralnet
 
 Code for Clustering Algorithm: /Clusters
 
+Our Final Project Report: /Report.pdf
+
 
 ## Project Motivation
 Current deep learning based tumor segmentation efforts are trained on highly-specialized datasets typically 
