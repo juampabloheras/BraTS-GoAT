@@ -7,6 +7,8 @@ Radiomics results extracted from BraTS 2023 Glioma Training Dataset: /Glioma
 
 Code for neural network: /neuralnet
 
+Code for Clustering Algorithm: /Clusters
+
 
 ## Project Motivation
 Current deep learning based tumor segmentation efforts are trained on highly-specialized datasets typically 
@@ -35,10 +37,10 @@ The strategy chosen involves framing the tumor segmentation generalization probl
 the aim is to simultaneously improve performance in all domains. In this context, we 
 define a domain as a group in an artificial clustering of the training datasets, and we aim to improve performance
 over all clusters. A natural clustering for this dataset would be based on tumor type; however, given that we 
-do not have this information, the idea is to produce new clusterings using an unsupervised approach. Furthermore, 
-we plan to analyze the sensitivity of the model performance to the clustering approach chosen, and interpret the 
+do not have this information, the idea is to produce new clusterings using an unsupervised approach. This is accomplished by
+embedding the images to a low dimensional latent space with a Variational Autoencoder (VAE), and iteratively clustering within this
+space. We plan to analyze the sensitivity of the model performance to the clustering approach chosen, and interpret the 
 results to try to understand which sets of features improve segmentation.
-
 
 
 ## Model Architecture
